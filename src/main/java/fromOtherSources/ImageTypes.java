@@ -26,21 +26,21 @@ public class ImageTypes {
     /** Contains the types of images
     
     */
-    public static final String image = "P18";
+    public static final String IMAGE = "P18";
 
-    public static final String imageOfGrave = "P1442";
+    public static final String IMAGE_OF_GRAVE = "P1442";
 
-    public static final String coatOfArmsImage = "P94";
+    public static final String COAT_OF_ARMS_IMAGE = "P94";
 
-    public static final String signature = "P109";
+    public static final String SIGNATURE = "P109";
 
-    public static final String logoImage = "P154";
+    public static final String LOGO_IMAGE = "P154";
 
-    public static final String locatorMapImage = "P242";
+    public static final String LOCATOR_MAP_IMAGE = "P242";
 
-    public static final String detailMap = "P1621";
+    public static final String DETAIL_MAP = "P1621";
 
-    public static final String flagImage = "P41";
+    public static final String FLAG_IMAGE = "P41";
 
-    public static final String sealImage = "P158";
+    public static final String SEAL_IMAGE = "P158";
 }

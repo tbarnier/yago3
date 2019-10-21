@@ -433,12 +433,12 @@ public class FactCollection extends AbstractSet<Fact> {
     }
 
     /** Maximal messages for comparison of fact collectioms */
-    public static final int maxMessages = 4;
+    public static final int MAX_MESSAGES = 4;
 
     /** Checks if all of my facts are in the other set, prints differences */
     public boolean checkContainedIn(FactCollection goldStandard, String name) {
         boolean matches = true;
-        int counter = maxMessages;
+        int counter = MAX_MESSAGES;
         next: for (Fact fact : this) {
             for (Fact other : goldStandard.getFactsWithSubjectAndRelation(fact.getSubject(), fact.getRelation())) {
                 if (other.getObject().equals(fact.getObject())) {

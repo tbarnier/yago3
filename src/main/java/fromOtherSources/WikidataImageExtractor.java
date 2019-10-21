@@ -66,13 +66,13 @@ public class WikidataImageExtractor extends DataExtractor {
     private static final Map<String, List<String>> imageRelationsInOrder;
     static {
         Map<String, List<String>> tempMap = new HashMap<String, List<String>>();
-        tempMap.put("person", Arrays.asList(ImageTypes.image, ImageTypes.imageOfGrave, ImageTypes.coatOfArmsImage, ImageTypes.signature));
-        tempMap.put("organization", Arrays.asList(ImageTypes.logoImage, ImageTypes.coatOfArmsImage, ImageTypes.image));
-        tempMap.put("event", Arrays.asList(ImageTypes.image));
-        tempMap.put("artifact", Arrays.asList(ImageTypes.logoImage, ImageTypes.image));
-        tempMap.put("location", Arrays.asList(ImageTypes.flagImage, ImageTypes.sealImage, ImageTypes.coatOfArmsImage, ImageTypes.detailMap,
-                ImageTypes.locatorMapImage, ImageTypes.image));
-        tempMap.put("other", Arrays.asList(ImageTypes.image));
+        tempMap.put("person", Arrays.asList(ImageTypes.IMAGE, ImageTypes.IMAGE_OF_GRAVE, ImageTypes.COAT_OF_ARMS_IMAGE, ImageTypes.SIGNATURE));
+        tempMap.put("organization", Arrays.asList(ImageTypes.LOGO_IMAGE, ImageTypes.COAT_OF_ARMS_IMAGE, ImageTypes.IMAGE));
+        tempMap.put("event", Arrays.asList(ImageTypes.IMAGE));
+        tempMap.put("artifact", Arrays.asList(ImageTypes.LOGO_IMAGE, ImageTypes.IMAGE));
+        tempMap.put("location", Arrays.asList(ImageTypes.FLAG_IMAGE, ImageTypes.SEAL_IMAGE, ImageTypes.COAT_OF_ARMS_IMAGE, ImageTypes.DETAIL_MAP,
+                ImageTypes.LOCATOR_MAP_IMAGE, ImageTypes.IMAGE));
+        tempMap.put("other", Arrays.asList(ImageTypes.IMAGE));
 
         imageRelationsInOrder = Collections.unmodifiableMap(tempMap);
     }

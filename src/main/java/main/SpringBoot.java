@@ -585,7 +585,7 @@ public class SpringBoot {
     }
 
     /** Header for the YAGO files */
-    public static final String header = "This file is part of the ontology YAGO3.\n"
+    public static final String HEADER = "This file is part of the ontology YAGO3.\n"
             + "It is licensed under a Creative-Commons Attribution License by the YAGO team\n"
             + "at the Max Planck Institute for Informatics/Germany.\n" 
             + "See http://yago-knowledge.org for all details.\n"
