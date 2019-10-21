@@ -48,7 +48,16 @@ public class Theme extends FactSource.FileFactSource implements Comparable<Theme
     /** Types of Theme */
     public enum ThemeGroup {
 
-        TAXONOMY, SIMPLETAX, CORE, GEONAMES, META, MULTILINGUAL, LINK, OTHER, INTERNAL, WIKIPEDIA;
+        TAXONOMY, 
+        SIMPLETAX, 
+        CORE, 
+        GEONAMES, 
+        META, 
+        MULTILINGUAL, 
+        LINK, 
+        OTHER, 
+        INTERNAL, 
+        WIKIPEDIA;
 
         public static ThemeGroup of(String s) {
             try {

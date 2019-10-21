@@ -41,7 +41,6 @@ import javatools.administrative.Announce;
 import javatools.datatypes.FinalSet;
 import javatools.filehandlers.FileLines;
 import javatools.parsers.Name;
-import main.ParallelCaller;
 import utils.Theme;
 import utils.Theme.ThemeGroup;
 
@@ -151,7 +150,7 @@ public class WordnetExtractor extends DataExtractor {
             }
             WORDNETWORDS.write(new Fact(null, lastClass, RDFS.label, wordForm));
         }
-        instances = null;
+
         for (String line : new FileLines(new File(inputData, "wn_hyp.pl"), "Loading subclassOf")) {
             line = line.replace("''", "'"); // TODO: Does this work for
             // wordnet_child's_game_100483935 ?
@@ -198,6 +197,6 @@ public class WordnetExtractor extends DataExtractor {
     }
 
     public static void main(String[] args) throws Exception {
-        new WordnetExtractor().extract(new File("c:/fabian/data/yago3"), ParallelCaller.HEADER);
+      //TODO        new WordnetExtractor().extract(new File("c:/fabian/data/yago3"), SpringBoot.HEADER);
     }
 }

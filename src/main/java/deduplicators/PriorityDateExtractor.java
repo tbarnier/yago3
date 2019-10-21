@@ -44,7 +44,6 @@ import fromWikipedia.TemporalInfoboxExtractor;
 import javatools.administrative.Announce;
 import javatools.administrative.Parameters;
 import javatools.datatypes.FinalSet;
-import main.ParallelCaller;
 import utils.FactCollection;
 import utils.FactCollection.Add;
 import utils.Theme;
@@ -64,7 +63,7 @@ public class PriorityDateExtractor extends Extractor {
 
     @Fact.ImplementationNote("Hardwired facts go first. Infoboxes should go before categories")
     public List<Theme> inputOrdered() {
-        List<Theme> input = new ArrayList<Theme>();
+        List<Theme> input = new ArrayList<>();
         input.add(SchemaExtractor.YAGOSCHEMA);
         input.add(HardExtractor.HARDWIREDFACTS);
         input.addAll(CategoryMapper.CATEGORYFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
@@ -101,10 +100,10 @@ public class PriorityDateExtractor extends Extractor {
      */
     @Override
     public final Set<Theme> input() {
-        Set<Theme> result = new HashSet<Theme>(inputOrdered());
+        Set<Theme> result = new HashSet<>(inputOrdered());
         result.add(PatternHardExtractor.FALSEFACTS);
         return (result);
-    };
+    }
 
     @Override
     public Set<Theme> inputCached() {
@@ -153,7 +152,7 @@ public class PriorityDateExtractor extends Extractor {
 
                     // check
                     List<Fact> facts = predToSubjToFacts.getOrDefault(fact.getSubject(), emptyMap).getOrDefault(fact.getRelation(), emptyList);
-                    boolean add = facts.size() == 0;
+                    boolean add = facts.isEmpty();
                     for (Fact other : facts) {
                         if (other.getObject().equals(fact.getObject())) {
                             add = true;
@@ -196,7 +195,7 @@ public class PriorityDateExtractor extends Extractor {
     public static void main(String[] args) throws Exception {
         Parameters.init(args[0]);
         File yago = Parameters.getFile("yagoFolder");
-        ParallelCaller.createWikipediaList(Parameters.getList("languages"), Parameters.getList("wikipedias"));
+//TODO        ParallelCaller.createWikipediaList(Parameters.getList("languages"), Parameters.getList("wikipedias"));
         //Announce.setLevel(Announce.Level.DEBUG);
         //new PriorityDateExtractor().extract(new File("/san/suchanek/yago3-2017-02-20"), "test");
         new PriorityDateExtractor().extract(yago, "test");

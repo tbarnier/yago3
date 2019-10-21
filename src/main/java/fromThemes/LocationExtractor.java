@@ -39,7 +39,6 @@ import extractors.MultilingualExtractor;
 import fromWikipedia.CategoryExtractor;
 import javatools.administrative.Parameters;
 import javatools.datatypes.FinalSet;
-import main.ParallelCaller;
 import utils.Theme;
 import utils.demonyms.LocationNames;
 
@@ -119,7 +118,6 @@ public class LocationExtractor extends Extractor {
         Parameters.init(args[0]);
         File yago = Parameters.getFile("yagoFolder");
         TransitiveTypeSubgraphExtractor.YAGOTRANSITIVETYPE.assignToFolder(yago);
-        ParallelCaller.createWikipediaList(Parameters.getList("languages"), Parameters.getList("wikipedias"));
         new LocationExtractor().extract(yago, "test");
     }
 

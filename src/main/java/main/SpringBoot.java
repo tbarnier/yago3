@@ -195,7 +195,7 @@ public class SpringBoot {
                 Set<Theme> weneed = new HashSet<>(e.input());
                 weneed.removeAll(themesWeHave);
                 Announce.warning("Could not call", e.name(), "because of missing", weneed);
-                ParallelCaller.printNeededExtractorsForThemes(weneed);
+                SpringBoot.printNeededExtractorsForThemes(weneed);
             }
             Announce.warning("Nobody produced or will produce", culprits());
         }
@@ -220,7 +220,7 @@ public class SpringBoot {
             boolean success = false;
             try {
                 if (!conf.isSimulate())
-                    ex.extract(conf.getOutputFolder(), ParallelCaller.HEADER + NumberFormatter.ISOtime() + ".\n\n");
+                    ex.extract(conf.getOutputFolder(), SpringBoot.HEADER + NumberFormatter.ISOtime() + ".\n\n");
                 for (Theme o : ex.output()) {
                     o.flush();
                 }
@@ -233,38 +233,10 @@ public class SpringBoot {
         }
     }
 
-    //    /** Create the list of Wikipedias */
-    //    public static void createWikipediaList(List<String> languages, List<String> wikis) {
-    //        if (wikis == null || wikis.isEmpty() || 
-    //            languages == null || languages.isEmpty() || wikis.size() > languages.size()
-    //                || !languages.get(0).startsWith("en")) 
-    //        {
-    //            Announce.help("Error: No wikipedias given. The ini file should contain:", 
-    //                    "   wikipedias = wiki_en.xml, wiki_de.xml, ...",
-    //                    "   languages = en, de, ...", 
-    //                    "with a 1:1 correspondence between languages and Wikipedias.",
-    //                    "The languages have to start with English, followed by the 'most English' other languages.",
-    //                    "Found: " + languages + ", " + wikis);
-    //        }
-    //        MultilingualExtractor.wikipediaLanguages = new ArrayList<>();
-    //        for (String l : languages) {
-    //            if (!l.matches("[a-z]{2,3}"))
-    //                Announce.error("Languages have to be 2 or 3-digit language codes, not", l);
-    //            MultilingualExtractor.wikipediaLanguages.add(l);
-    //        }
-    //        wikipedias = new HashMap<>();
-    //        for (int i = 0; i < languages.size(); i++) {
-    //            File wiki = new File(wikis.get(i));
-    //            if (!wiki.exists())
-    //                Announce.error("Wikipedia not found:", wiki);
-    //            wikipedias.put(languages.get(i), wiki);
-    //        }
-    //    }
-
     public static void fillTheme2Extractor() {
         Enumeration<URL> roots = null;
         try {
-            roots = ParallelCaller.class.getClassLoader().getResources("");
+            roots = SpringBoot.class.getClassLoader().getResources("");
         }
         catch (IOException e) {
             log.warn("Exception occured!", e);
@@ -425,7 +397,9 @@ public class SpringBoot {
         return es;
     }
 
-    /** Read file backwards. Does not use buffers, therefore slow */
+    /** Read file backwards. Does not use buffers, therefore slow 
+     * Returns the last maxlines of text read from file end into a string
+     */
     public static String tail(File src, int maxLines) throws IOException {
         if (src == null || !src.isFile())
             return null;
@@ -649,7 +623,7 @@ public class SpringBoot {
                 }
                 else
                     if (superclasses.contains(EnglishWikipediaExtractor.class)) {
-                        extractors.add(EnglishWikipediaExtractor.forName((Class<DataExtractor>) clss, conf.getWikipedias().get("en")));
+                        extractors.add(DataExtractor.forName((Class<DataExtractor>) clss, conf.getWikipedias().get("en")));
                     }
                     else
                         if (superclasses.contains(DataExtractor.class)) {

@@ -22,7 +22,6 @@ along with YAGO.  If not, see <http://www.gnu.org/licenses/>.
 package utils;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -320,12 +319,12 @@ public class FactCollection extends AbstractSet<Fact> {
     }
 
     /** Loads from N4 file. Checks duplicates. */
-    public FactCollection(File n4File) throws IOException {
+    public FactCollection(File n4File) {
         this(n4File, false);
     }
 
     /** Loads from N4 file. FAST does not check duplicates */
-    public FactCollection(File n4File, boolean fast) throws IOException {
+    public FactCollection(File n4File, boolean fast) {
         this(FactSource.from(n4File), fast);
     }
 
@@ -387,7 +386,7 @@ public class FactCollection extends AbstractSet<Fact> {
     }
 
     /** Loads from N4 file */
-    public void load(File n4File) throws IOException {
+    public void load(File n4File) {
         load(FactSource.from(n4File));
     }
 

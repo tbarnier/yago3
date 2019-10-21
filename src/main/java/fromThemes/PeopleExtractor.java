@@ -21,7 +21,6 @@ import fromWikipedia.CategoryExtractor;
 import javatools.administrative.Announce;
 import javatools.administrative.Parameters;
 import javatools.datatypes.FinalSet;
-import main.ParallelCaller;
 import utils.Theme;
 
 public class PeopleExtractor extends Extractor {
@@ -31,7 +30,7 @@ public class PeopleExtractor extends Extractor {
     public static final Theme MANUALPEOPLESOURCE = new Theme("peopleByCategorySource", "People extracted by manually selected categories");
 
     private Set<Theme> categoryInput() {
-        Set<Theme> input = new HashSet<Theme>();
+        Set<Theme> input = new HashSet<>();
         input.addAll(CategoryExtractor.CATEGORYMEMBERS.inLanguages(MultilingualExtractor.wikipediaLanguages));
         input.addAll(CategoryExtractor.CATEGORYMEMBERS_TRANSLATED.inLanguages(MultilingualExtractor.allLanguagesExceptEnglish()));
         return input;
@@ -39,7 +38,7 @@ public class PeopleExtractor extends Extractor {
 
     @Override
     public Set<Theme> input() {
-        Set<Theme> input = new HashSet<Theme>();
+        Set<Theme> input = new HashSet<>();
         input.addAll(categoryInput());
         input.addAll(DictionaryExtractor.ENTITY_DICTIONARY.inLanguages(MultilingualExtractor.allLanguagesExceptEnglish()));
         return input;
@@ -108,7 +107,7 @@ public class PeopleExtractor extends Extractor {
         Announce.setLevel(Announce.Level.DEBUG);
         Parameters.init(args[0]);
         File yago = Parameters.getFile("yagoFolder");
-        ParallelCaller.createWikipediaList(Parameters.getList("languages"), Parameters.getList("wikipedias"));
+      //TODO        ParallelCaller.createWikipediaList(Parameters.getList("languages"), Parameters.getList("wikipedias"));
         new PeopleExtractor().extract(yago, "MANUAL RUN");
     }
 }

@@ -183,9 +183,34 @@ public class TemporalInfoboxExtractor extends EnglishWikipediaExtractor {
 
     protected Map<String, TermParser> parserForRelation = new HashMap<>();
 
+    
+    protected String getRelationClass(String relation, FactCollection factCollection)
+    {
+        String classe;
+        if (relation.endsWith("->")) {
+            relation = Char17.cutLast(Char17.cutLast(relation)) + '>';
+            classe = factCollection.getObject(relation, RDFS.domain);
+        }
+        else {
+            classe = factCollection.getObject(relation, RDFS.range);
+        }
+        if (classe == null) {
+            Announce.warning("Unknown relation to extract:", relation);
+            classe = YAGO.entity;
+        }
+        return classe;
+    }
+    
+
     /** Extracts a relation from a string */
-    protected void extract(String entity, String valueString, String relation, Map<String, String> preferredMeanings, FactCollection factCollection,
-            PatternList replacements, DateParser dateParser) throws IOException {
+    // Initial 101
+    protected void extract(String entity, 
+            String valueString, 
+            String relation, 
+            Map<String, String> preferredMeanings, 
+            FactCollection factCollection,
+            PatternList replacements, 
+            DateParser dateParser) throws IOException {
 
         // If the relation is for a combined attribute
         if (relation.contains(",")) {
@@ -195,11 +220,9 @@ public class TemporalInfoboxExtractor extends EnglishWikipediaExtractor {
             Fact baseFact;
 
             try {
-                valueString = replacements.transform(Char17.decodeAmpersand(valueString));
-
-                valueString = valueString.replace("$0", FactComponent.stripBrackets(entity));
-
-                valueString = valueString.trim();
+                valueString = replacements.transform(Char17.decodeAmpersand(valueString))
+                        .replace("$0", FactComponent.stripBrackets(entity))
+                        .trim();
             }
             catch (Exception e) {
                 return;
@@ -207,23 +230,10 @@ public class TemporalInfoboxExtractor extends EnglishWikipediaExtractor {
             if (valueString.length() == 0)
                 return;
 
-            // Check inverse
-            boolean inverse;
-            String cls;
-            if (relation.endsWith("->")) {
-                inverse = true;
-                relation = Char17.cutLast(Char17.cutLast(relation)) + '>';
-                cls = factCollection.getObject(relation, RDFS.domain);
-            }
-            else {
-                inverse = false;
-                cls = factCollection.getObject(relation, RDFS.range);
-            }
-            if (cls == null) {
-                Announce.warning("Unknown relation to extract:", relation);
-                cls = YAGO.entity;
-            }
-
+            boolean inverse = relation.endsWith("->");
+            
+            String cls = getRelationClass(relation, factCollection);
+            
             // Get the term extractor
             TermParser extractor = parserForRelation.computeIfAbsent(cls, k -> {
                 try {
@@ -234,9 +244,6 @@ public class TemporalInfoboxExtractor extends EnglishWikipediaExtractor {
                 }
                 return null;
             });
-
-            // String syntaxChecker = FactComponent.asJavaString(factCollection
-            // .getObject(cls, "<_hasTypeCheckPattern>"));
 
             // Extract all terms //change it. Extract terms per value in the valuestring ;-)
 
@@ -303,10 +310,10 @@ public class TemporalInfoboxExtractor extends EnglishWikipediaExtractor {
                     }
 
                     // attaching dates to basefacts
-                    if (! dateObjectsList.isEmpty()) {
+                    if (!dateObjectsList.isEmpty()) {
                         try {
                             List<String> dates = dateObjectsList.get(i);
-                            if (! dates.isEmpty() && (FactComponent.isUri(baseFact.getArg(2)) || FactComponent.isLiteral(baseFact.getArg(2)))) {
+                            if (!dates.isEmpty() && (FactComponent.isUri(baseFact.getArg(2)) || FactComponent.isLiteral(baseFact.getArg(2)))) {
                                 write(TEMPORALDIRTYINFOBOXFACTS, baseFact, TEMPORALINFOBOXSOURCES, FactComponent.wikipediaURL(entity),
                                         "TemporalInfoboxExtractor: from " + valueString);
                                 Fact metafact = baseFact.metaFact("<occursSince>", dates.get(0));
@@ -328,11 +335,8 @@ public class TemporalInfoboxExtractor extends EnglishWikipediaExtractor {
                     if (factCollection.contains(relation, RDFS.type, YAGO.function))
                         break;
                 }
-
             }
-
         }
-
     }
 
     private String getWordnetClassForPoliticalPosition(String object, Map<String, String> preferredMeanings) {
@@ -341,9 +345,12 @@ public class TemporalInfoboxExtractor extends EnglishWikipediaExtractor {
     }
 
     public String category2class(String categoryName, Map<String, String> preferredMeanings, boolean pluralityIsImportant) {
+
         categoryName = FactComponent.stripCat(categoryName);
+
         // Check out whether the new category is worth being added
         NounGroup category = new NounGroup(categoryName);
+        
         if (category.head() == null) {
             Announce.debug("Could not find type in", categoryName, "(has empty head)");
             return (null);
@@ -357,11 +364,9 @@ public class TemporalInfoboxExtractor extends EnglishWikipediaExtractor {
         category = new NounGroup(categoryName.toLowerCase());
 
         // Only plural words are good hypernyms
-        if (pluralityIsImportant) {
-            if (PlingStemmer.isSingular(category.head()) && !category.head().equals("people")) {
-                Announce.debug("Could not find type in", categoryName, "(is singular)");
-                return (null);
-            }
+        if (pluralityIsImportant && PlingStemmer.isSingular(category.head()) && !category.head().equals("people")) {
+            Announce.debug("Could not find type in", categoryName, "(is singular)");
+            return (null);
         }
         String stemmedHead = PlingStemmer.stem(category.head());
 
@@ -611,6 +616,5 @@ public class TemporalInfoboxExtractor extends EnglishWikipediaExtractor {
             t.assignToFolder(new File(folder));
         }
         e.extract(new File("./out"), "Test on 1 wikipedia article");
-
     }
 }
