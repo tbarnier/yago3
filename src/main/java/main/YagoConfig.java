@@ -39,29 +39,11 @@ public class YagoConfig {
 
     /** Wikipedias in different languages */
     private Map<String, File> wikipedias;
-    //
-    //    /** Extractors still to do */
-    //    private List<Extractor> extractorsToDo;
-    //
-    //    /** Extractors running */
-    //    private List<Extractor> extractorsRunning = new ArrayList<>();
-    //
-    //    /** Extractors running */
-    //    private List<Extractor> extractorsFailed = new ArrayList<>();
-    //
-    //    /** Themes we have */
-    //    private Set<Theme> themesWeHave = new TreeSet<>();
-    //
-    //    /** Themes we produced and that were not used */
-    //    private Set<Theme> themesWeProducedAndNobodyConsumed = new TreeSet<>();
-    //
-    //    /** Caches we killed */
-    //    private Set<Theme> cachesWeKilled = new TreeSet<>();
 
-    private List<String> languages = Collections.EMPTY_LIST;
+    private List<String> languages = Collections.emptyList();
 
     /** Extractor names */
-    private List<String> extractors = Collections.EMPTY_LIST;
+    private List<String> extractors = Collections.emptyList();
 
     /** Number of threads we want */
     private int numThreads = 16;
@@ -79,12 +61,5 @@ public class YagoConfig {
      */
     @Setter(AccessLevel.NONE)
     private boolean rerunDependentExtractors = false;
-    //
-    //    /** Maps from a theme to the extractor which produces it */
-    //    private Map<Theme, Extractor> theme2extractor = new HashMap<>();
-    //
-    //    /** Maps from a follow-up theme to the base extractor */
-    //    private Map<Extractor, List<Extractor>> baseExtractor2FollowUp = new HashMap<>();
-    //
-    //    private Map<String, List<Extractor>> call2extractor = new HashMap<>();
+ 
 }

@@ -235,7 +235,7 @@ public class ParallelCaller {
             boolean success = false;
             try {
                 if (!simulate)
-                    ex.extract(outputFolder, ParallelCaller.header + NumberFormatter.ISOtime() + ".\n\n");
+                    ex.extract(outputFolder, ParallelCaller.HEADER + NumberFormatter.ISOtime() + ".\n\n");
                 for (Theme o : ex.output()) {
                     o.flush();
                 }
@@ -330,7 +330,7 @@ public class ParallelCaller {
             boolean changed = false;
             for (T e : new ArrayList<>(map.keySet())) {
                 changed |= map.get(e).removeIf(d -> done.contains(d));
-                if (map.get(e).size() == 0) {
+                if (map.get(e).isEmpty()) {
                     done.add(e);
                     map.remove(e);
                     result.add(e);
@@ -349,7 +349,9 @@ public class ParallelCaller {
             List<T> path = new ArrayList<>();
             Map<T, Integer> toDistance = new HashMap<>();
             Map<T, T> prev = new HashMap<>();
-            T start = map.keySet().iterator().next(), act = start;
+            T start = map.keySet().iterator().next();
+            T act = start;
+            
             int actDist = 0;
             while (!done.contains(act)) {
                 done.add(act);
@@ -385,8 +387,6 @@ public class ParallelCaller {
             while ((act = prev.get(act)) != null);
             Announce.warning("path: ", start, " --> ", map.get(start));
         }
-        while (result.remove(null))
-            ;
         return result;
     }
 
@@ -446,7 +446,8 @@ public class ParallelCaller {
         StringBuilder sb = new StringBuilder();
         int lines = 0;
         try (RandomAccessFile f = new RandomAccessFile(src, "r")) {
-            long length = f.length(), p;
+            long length = f.length();
+            long p;
             for (p = length - 1; p >= 0 && lines < maxLines; p--) {
                 f.seek(p);
                 int b = f.read();
@@ -532,7 +533,8 @@ public class ParallelCaller {
         themesWeHave.clear();
         if (reuse) {
             // check which themes exist, and which we could reuse
-            Set<Theme> available = new HashSet<>(), reusable = new HashSet<>();
+            Set<Theme> available = new HashSet<>();
+            Set<Theme>  reusable = new HashSet<>();
             for (Theme t : Theme.all()) {
                 File f = t.findFileInFolder(outputFolder);
                 if (f == null || !tail(f, 1).contains("# end of file")) {
@@ -598,9 +600,10 @@ public class ParallelCaller {
     }
 
     /** Header for the YAGO files */
-    public static String header = "This file is part of the ontology YAGO3.\n"
+    public static final String HEADER = "This file is part of the ontology YAGO3.\n"
             + "It is licensed under a Creative-Commons Attribution License by the YAGO team\n"
-            + "at the Max Planck Institute for Informatics/Germany.\n" + "See http://yago-knowledge.org for all details.\n"
+            + "at the Max Planck Institute for Informatics/Germany.\n" 
+            + "See http://yago-knowledge.org for all details.\n"
             + "This file was generated on ";
 
     /** Creates extractors as given by the names */
@@ -609,23 +612,6 @@ public class ParallelCaller {
         if (extractorNames == null || extractorNames.isEmpty()) {
             Announce.help("Error: No extractors given. The ini file should contain", "   extractors = package.extractorClass[(fileName)], ...",
                     "The filename arguments are required only for DataExtractors", "if you want them to run on other files than the default files.");
-
-            /*
-             * // In the future: Collect extractor names automatically 
-             * File source = new File("./src"); 
-             * if (!source.exists() || !source.isDirectory()) {
-             * Announce.help( "Error: No extractors given. The ini file should contain",
-             * "   extractors = package.extractorClass[(fileName)], ...",
-             * "The filename arguments are required only for DataExtractors",
-             * "if you want them to run on other files than the default files.", "",
-             * "Alternatively, if there is a folder './src', the extractor names" ,
-             * "will be collected from there."); } extractorNames = new ArrayList<>();
-             * List<String> exclude = Arrays.asList("deduplicators", "extractors",
-             * "followUp", "main", "utils"); for (File dir : source.listFiles()) { if
-             * (dir.isDirectory() && !exclude.contains(dir.getName())) { for (String e :
-             * dir.list()) { if (e.endsWith(".java")) { extractorNames.add(dir.getName() +
-             * "." + e.substring(0, e.length() - 5)); } } } }
-             */
         }
 
         List<Extractor> extractors = new ArrayList<>();

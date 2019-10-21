@@ -58,10 +58,10 @@ public class FactCollection extends AbstractSet<Fact> {
     protected int size = 0;
 
     /** Maps first arg to relation to facts */
-    protected Map<String, Map<String, Set<Fact>>> index = new HashMap<String, Map<String, Set<Fact>>>();
+    protected Map<String, Map<String, Set<Fact>>> index = new HashMap<>();
 
     /** Maps relation to facts */
-    protected Map<String, Set<Fact>> relindex = new HashMap<String, Set<Fact>>();
+    protected Map<String, Set<Fact>> relindex = new HashMap<>();
 
     /** Adds a fact, adds a source fact and a technique fact */
     public boolean add(Fact fact, String source, String technique) {
@@ -79,9 +79,14 @@ public class FactCollection extends AbstractSet<Fact> {
     /** Type of things that happen when a fact is added */
     public enum Add {
 
-        NULL(false, false, false, false), DUPLICATE(false, false, false, true), TOOGENERAL(false, false, false, true), NOID(false, false, false,
-                false), FUNCLASH(false, false, true,
-                        false), MORESPECIFIC(true, true, false, true), ADDED(true, false, false, false), HASID(true, true, false, true);
+        NULL(false, false, false, false), 
+        DUPLICATE(false, false, false, true), 
+        TOOGENERAL(false, false, false, true), 
+        NOID(false, false, false, false), 
+        FUNCLASH(false, false, true, false), 
+        MORESPECIFIC(true, true, false, true), 
+        ADDED(true, false, false, false), 
+        HASID(true, true, false, true);
 
         public final boolean added;
 
@@ -294,7 +299,7 @@ public class FactCollection extends AbstractSet<Fact> {
     public List<Fact> seekFactsWithRelationAndObject(String relation, String arg2) {
         if (!relindex.containsKey(relation))
             return (Collections.emptyList());
-        List<Fact> result = new ArrayList<Fact>();
+        List<Fact> result = new ArrayList<>();
         for (Fact f : relindex.get(relation)) {
             if (f.getObject().equals(arg2))
                 result.add(f);
@@ -325,12 +330,12 @@ public class FactCollection extends AbstractSet<Fact> {
     }
 
     /** Loads from N4 file. Checks duplicates */
-    public FactCollection(FactSource n4File) throws IOException {
+    public FactCollection(FactSource n4File) {
         this(n4File, false);
     }
 
     /** Loads from N4 file. FAST does not check duplicates */
-    public FactCollection(FactSource n4File, boolean fast) throws IOException {
+    public FactCollection(FactSource n4File, boolean fast) {
         if (fast)
             loadFast(n4File);
         else
@@ -428,7 +433,7 @@ public class FactCollection extends AbstractSet<Fact> {
     }
 
     /** Maximal messages for comparison of fact collectioms */
-    public static int maxMessages = 4;
+    public static final int maxMessages = 4;
 
     /** Checks if all of my facts are in the other set, prints differences */
     public boolean checkContainedIn(FactCollection goldStandard, String name) {
@@ -479,7 +484,7 @@ public class FactCollection extends AbstractSet<Fact> {
 
     /** Returns a map of subject-> object for a relation between strings */
     public Map<String, String> collectSubjectAndObjectAsStrings(String relation) {
-        Map<String, String> objects = new HashMap<String, String>();
+        Map<String, String> objects = new HashMap<>();
         for (Fact fact : getFactsWithRelation(relation)) {
             objects.put(fact.getArgJavaString(1), fact.getArgJavaString(2));
         }
@@ -490,7 +495,7 @@ public class FactCollection extends AbstractSet<Fact> {
 
     /** Returns a set of strings for a type */
     public Set<String> seekStringsOfType(String type) {
-        Set<String> result = new HashSet<String>();
+        Set<String> result = new HashSet<>();
         for (Fact fact : seekFactsWithRelationAndObject("rdf:type", type)) {
             result.add(fact.getArgJavaString(1));
         }
@@ -642,14 +647,14 @@ public class FactCollection extends AbstractSet<Fact> {
     public static void main(String[] args) throws Exception {
         FactCollection f = new FactCollection();
         f.add(new Fact("Elvis", "bornIn", FactComponent.forDate("1935-##-##")));
-        System.out.println(f);
+        log.info("{}", f);
         f.add(new Fact("Elvis", "bornIn", FactComponent.forDate("1935-##-##")));
-        System.out.println(f);
+        log.info("{}", f);
         f.add(new Fact("Elvis", "bornIn", FactComponent.forDate("1935-01-08")));
         log.info("{}", f);
         f.add(new Fact("Elvis", "livesIn", "Tupelo"));
-        System.out.println(f);
+        log.info("{}", f);
         f.remove(new Fact("Elvis", "livesIn", "Tupelo"));
-        System.out.println(f);
+        log.info("{}", f);
     }
 }

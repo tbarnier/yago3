@@ -69,21 +69,21 @@ public class WordnetExtractor extends DataExtractor {
 
     @Override
     public Set<Theme> input() {
-        return new HashSet<Theme>(Arrays.asList(HardExtractor.HARDWIREDFACTS));
+        return new HashSet<>(Arrays.asList(HardExtractor.HARDWIREDFACTS));
     }
 
     @Override
     public Set<Theme> output() {
-        return new FinalSet<Theme>(WORDNETCLASSES, WORDNETWORDS, WORDNETIDS, WORDNETGLOSSES, PREFMEANINGS);
+        return new FinalSet<>(WORDNETCLASSES, WORDNETWORDS, WORDNETIDS, WORDNETGLOSSES, PREFMEANINGS);
     }
 
     /** Pattern for synset definitions */
     // s(100001740,1,'entity',n,1,11).
-    public static Pattern SYNSETPATTERN = Pattern.compile("s\\((\\d+),\\d*,'(.*)',(.),(\\d*),(\\d*)\\)\\.");
+    public static final Pattern SYNSETPATTERN = Pattern.compile("s\\((\\d+),\\d*,'(.*)',(.),(\\d*),(\\d*)\\)\\.");
 
     /** Pattern for relation definitions */
     // hyp (00001740,00001740).
-    public static Pattern RELATIONPATTERN = Pattern.compile("\\w*\\((\\d{9}),(.*)\\)\\.");
+    public static final Pattern RELATIONPATTERN = Pattern.compile("\\w*\\((\\d{9}),(.*)\\)\\.");
 
     @Override
     public void extract() throws Exception {
@@ -97,7 +97,7 @@ public class WordnetExtractor extends DataExtractor {
             definedWords.add(f.getArgJavaString(2));
         }
 
-        Collection<String> instances = new HashSet<String>(8000);
+        Collection<String> instances = new HashSet<>(8000);
         for (String line : new FileLines(new File(inputData, "wn_ins.pl"), "Loading instances")) {
             line = line.replace("''", "'");
             Matcher m = RELATIONPATTERN.matcher(line);
@@ -106,7 +106,7 @@ public class WordnetExtractor extends DataExtractor {
             }
             instances.add(m.group(1));
         }
-        Map<String, String> id2class = new HashMap<String, String>(80000);
+        Map<String, String> id2class = new HashMap<>(80000);
         String lastId = "";
         String lastClass = "";
 
@@ -198,6 +198,6 @@ public class WordnetExtractor extends DataExtractor {
     }
 
     public static void main(String[] args) throws Exception {
-        new WordnetExtractor().extract(new File("c:/fabian/data/yago3"), ParallelCaller.header);
+        new WordnetExtractor().extract(new File("c:/fabian/data/yago3"), ParallelCaller.HEADER);
     }
 }

@@ -74,8 +74,6 @@ public class SpringBoot {
     @Autowired
     private static YagoConfig conf;
 
-    //    /** Wikipedias in different languages */
-    //    protected static Map<String, File> wikipedias;
 
     /** Extractors still to do */
     protected static List<Extractor> extractorsToDo;
@@ -222,7 +220,7 @@ public class SpringBoot {
             boolean success = false;
             try {
                 if (!conf.isSimulate())
-                    ex.extract(conf.getOutputFolder(), ParallelCaller.header + NumberFormatter.ISOtime() + ".\n\n");
+                    ex.extract(conf.getOutputFolder(), ParallelCaller.HEADER + NumberFormatter.ISOtime() + ".\n\n");
                 for (Theme o : ex.output()) {
                     o.flush();
                 }
@@ -269,7 +267,7 @@ public class SpringBoot {
             roots = ParallelCaller.class.getClassLoader().getResources("");
         }
         catch (IOException e) {
-            e.printStackTrace();
+            log.warn("Exception occured!", e);
         }
         while (roots.hasMoreElements()) {
             URL rootURL = roots.nextElement();
@@ -277,7 +275,7 @@ public class SpringBoot {
             for (File file : FileUtils.getAllFiles(root)) {
                 if (file.getName().endsWith(".class") && !file.getName().contains("$")) {
                     String fullClassName = file.getAbsolutePath().replace(root.getAbsolutePath() + "/", "").replace("/", ".");
-                    fullClassName = fullClassName.substring(0, fullClassName.lastIndexOf("."));
+                    fullClassName = fullClassName.substring(0, fullClassName.lastIndexOf('.'));
                     List<Extractor> es = null;
                     try {
                         es = getExtractorForClassIfPossible(fullClassName);
@@ -340,7 +338,8 @@ public class SpringBoot {
             List<T> path = new ArrayList<>();
             Map<T, Integer> toDistance = new HashMap<>();
             Map<T, T> prev = new HashMap<>();
-            T start = map.keySet().iterator().next(), act = start;
+            T start = map.keySet().iterator().next();
+            T act = start;
             int actDist = 0;
             while (!done.contains(act)) {
                 done.add(act);
@@ -434,7 +433,9 @@ public class SpringBoot {
         StringBuilder sb = new StringBuilder();
         int lines = 0;
         try (RandomAccessFile f = new RandomAccessFile(src, "r")) {
-            long length = f.length(), p;
+            long length = f.length();
+            long p;
+            
             for (p = length - 1; p >= 0 && lines < maxLines; p--) {
                 f.seek(p);
                 int b = f.read();
@@ -455,17 +456,8 @@ public class SpringBoot {
         return sb.reverse().toString();
     }
 
-    public static void loadParams(String initFile) {
-        log.info("Initializing from", initFile);
-
-        //        createWikipediaList(conf.getLanguages(), Parameters.getList("wikipedias"));
-
-    }
-
     public static void main(String[] args) throws Exception {
-        String initFile = args.length == 0 ? "../yago.ini" : args[0];
 
-        loadParams(initFile);
         List<Pattern> rerunDependentOn = new ArrayList<>();
         List<String> rerunDependentOnRegex = conf.getRerunDependentOn();
         if (rerunDependentOnRegex != null) {
@@ -474,11 +466,15 @@ public class SpringBoot {
             }
         }
 
-        if (conf.isSimulate())
+        if (conf.isSimulate()) {
             log.info("Simulating a YAGO run");
-        else
+            conf.setOutputFolder(conf.getYagoSimulationFolder());
+        }
+        else {
             log.info("Running YAGO extractors in parallel");
-
+            conf.setOutputFolder(conf.getYagoFolder());
+        }
+        
         Extractor.includeConcepts = conf.isIncludeConcepts();
         if (conf.isIncludeConcepts()) {
             log.info("Including Concepts");
@@ -486,11 +482,6 @@ public class SpringBoot {
         else {
             log.info("Only Named Entities");
         }
-
-        if (conf.isSimulate())
-            conf.setOutputFolder(conf.getYagoSimulationFolder());
-        else
-            conf.setOutputFolder(conf.getYagoFolder());
 
         extractorsToDo = new ArrayList<>(extractors(conf.getExtractors()));
 
@@ -596,7 +587,8 @@ public class SpringBoot {
     /** Header for the YAGO files */
     public static final String header = "This file is part of the ontology YAGO3.\n"
             + "It is licensed under a Creative-Commons Attribution License by the YAGO team\n"
-            + "at the Max Planck Institute for Informatics/Germany.\n" + "See http://yago-knowledge.org for all details.\n"
+            + "at the Max Planck Institute for Informatics/Germany.\n" 
+            + "See http://yago-knowledge.org for all details.\n"
             + "This file was generated on ";
 
     /** Creates extractors as given by the names */
@@ -605,23 +597,6 @@ public class SpringBoot {
         if (extractorNames == null || extractorNames.isEmpty()) {
             Announce.help("Error: No extractors given. The ini file should contain", "   extractors = package.extractorClass[(fileName)], ...",
                     "The filename arguments are required only for DataExtractors", "if you want them to run on other files than the default files.");
-
-            /*
-             * // In the future: Collect extractor names automatically 
-             * File source = new File("./src"); 
-             * if (!source.exists() || !source.isDirectory()) {
-             * Announce.help( "Error: No extractors given. The ini file should contain",
-             * "   extractors = package.extractorClass[(fileName)], ...",
-             * "The filename arguments are required only for DataExtractors",
-             * "if you want them to run on other files than the default files.", "",
-             * "Alternatively, if there is a folder './src', the extractor names" ,
-             * "will be collected from there."); } extractorNames = new ArrayList<>();
-             * List<String> exclude = Arrays.asList("deduplicators", "extractors",
-             * "followUp", "main", "utils"); for (File dir : source.listFiles()) { if
-             * (dir.isDirectory() && !exclude.contains(dir.getName())) { for (String e :
-             * dir.list()) { if (e.endsWith(".java")) { extractorNames.add(dir.getName() +
-             * "." + e.substring(0, e.length() - 5)); } } } }
-             */
         }
 
         List<Extractor> extractors = new ArrayList<>();

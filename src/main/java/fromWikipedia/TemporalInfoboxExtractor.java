@@ -71,13 +71,13 @@ public class TemporalInfoboxExtractor extends EnglishWikipediaExtractor {
 
     @Override
     public Set<FollowUpExtractor> followUp() {
-        return new FinalSet<FollowUpExtractor>(new Redirector(TEMPORALDIRTYINFOBOXFACTS, TEMPORALREDIRECTEDINFOBOXFACTS, this),
+        return new FinalSet<>(new Redirector(TEMPORALDIRTYINFOBOXFACTS, TEMPORALREDIRECTEDINFOBOXFACTS, this),
                 new TypeChecker(TEMPORALREDIRECTEDINFOBOXFACTS, TEMPORALINFOBOXFACTS, this));
     }
 
     @Override
     public Set<Theme> input() {
-        Set<Theme> input = new TreeSet<Theme>(Arrays.asList(PatternHardExtractor.TITLEPATTERNS, PatternHardExtractor.INFOBOXTEMPORALPATTERNS,
+        Set<Theme> input = new TreeSet<>(Arrays.asList(PatternHardExtractor.TITLEPATTERNS, PatternHardExtractor.INFOBOXTEMPORALPATTERNS,
                 PatternHardExtractor.INFOBOXREPLACEMENTS, WordnetExtractor.WORDNETWORDS, HardExtractor.HARDWIREDFACTS,
                 PatternHardExtractor.DATEPARSER));
         if (!Extractor.includeConcepts) {
@@ -107,7 +107,7 @@ public class TemporalInfoboxExtractor extends EnglishWikipediaExtractor {
 
     @Override
     public Set<Theme> output() {
-        return new FinalSet<Theme>(TEMPORALDIRTYINFOBOXFACTS, INFOBOXTYPES, TEMPORALINFOBOXSOURCES);
+        return new FinalSet<>(TEMPORALDIRTYINFOBOXFACTS, INFOBOXTYPES, TEMPORALINFOBOXSOURCES);
     }
 
     /**
@@ -250,7 +250,6 @@ public class TemporalInfoboxExtractor extends EnglishWikipediaExtractor {
                 value = value.replaceAll("\\{\\{flag.*?\\}\\}", "");
                 List<String> objects = extractor.extractList(value);
                 ArrayList<List<String>> dateObjectsList = new ArrayList<>(10);
-                //				String date_value=new String(value);
 
                 dateObjectsList.add(dateParser.extractList(value.replaceAll("\\[\\[.*?\\]\\]", "")));
 
@@ -304,12 +303,10 @@ public class TemporalInfoboxExtractor extends EnglishWikipediaExtractor {
                     }
 
                     // attaching dates to basefacts
-                    // if (dateObjectsList.size() < 1 || multiValues.length < 2)
-                    // return;
-                    if (dateObjectsList.size() > 0) {
+                    if (! dateObjectsList.isEmpty()) {
                         try {
                             List<String> dates = dateObjectsList.get(i);
-                            if (dates.size() > 0 && (FactComponent.isUri(baseFact.getArg(2)) || FactComponent.isLiteral(baseFact.getArg(2)))) {
+                            if (! dates.isEmpty() && (FactComponent.isUri(baseFact.getArg(2)) || FactComponent.isLiteral(baseFact.getArg(2)))) {
                                 write(TEMPORALDIRTYINFOBOXFACTS, baseFact, TEMPORALINFOBOXSOURCES, FactComponent.wikipediaURL(entity),
                                         "TemporalInfoboxExtractor: from " + valueString);
                                 Fact metafact = baseFact.metaFact("<occursSince>", dates.get(0));
@@ -339,7 +336,7 @@ public class TemporalInfoboxExtractor extends EnglishWikipediaExtractor {
     }
 
     private String getWordnetClassForPoliticalPosition(String object, Map<String, String> preferredMeanings) {
-        // TODO Auto-generated method stub
+
         return category2class(object, preferredMeanings, false);
     }
 
@@ -454,21 +451,9 @@ public class TemporalInfoboxExtractor extends EnglishWikipediaExtractor {
                 return null;
             });
 
-            // String syntaxChecker = FactComponent.asJavaString(factCollection
-            // .getObject(cls, "<_hasTypeCheckPattern>"));
-
             // Extract all terms
             List<String> objects = extractor.extractList(valueString);
             for (String object : objects) {
-                // Check syntax
-                // if (syntaxChecker != null
-                // && !FactComponent.asJavaString(object).matches(
-                // syntaxChecker)) {
-                // Announce.debug("Extraction", object, "for", entity,
-                // relation, "does not match syntax check",
-                // syntaxChecker);
-                // continue;
-                // }
                 // Check data type
                 if (FactComponent.isLiteral(object) && i == 0) {
                     String[] value = FactComponent.literalAndDatatypeAndLanguage(object);
@@ -532,8 +517,8 @@ public class TemporalInfoboxExtractor extends EnglishWikipediaExtractor {
 
     /** reads an infobox */
     public static Map<String, Set<String>> readInfobox(Reader in, Map<String, String> combinations) throws IOException {
-        Map<String, Set<String>> result = new TreeMap<String, Set<String>>();
-        Map<String, Set<String>> resultUnNormalized = new TreeMap<String, Set<String>>();
+        Map<String, Set<String>> result = new TreeMap<>();
+        Map<String, Set<String>> resultUnNormalized = new TreeMap<>();
 
         while (true) {
             String attribute = FileLines.readTo(in, "</page>", "=", "}");
@@ -573,26 +558,6 @@ public class TemporalInfoboxExtractor extends EnglishWikipediaExtractor {
         }
 
         // Apply combinations
-        // next: for (String code : combinations.keySet()) {
-        // StringBuilder val = new StringBuilder();
-        // for (String attribute : code.split(">")) {
-        // int scanTo = attribute.indexOf('<');
-        // if (scanTo != -1) {
-        // val.append(attribute.substring(0, scanTo));
-        // String temp = attribute.substring(scanTo + 1);
-        // String newVal = D.pick(result.get(normalizeAttribute(temp)));
-        // if (newVal == null)
-        // continue next;
-        // val.append(newVal);
-        // } else {
-        // val.append(attribute);
-        // }
-        // }
-        // D.addKeyValue(result, normalizeAttribute(combinations.get(code)),
-        // val.toString(), TreeSet.class);
-        // }
-
-        // Apply combinations
         next: for (String code : combinations.keySet()) {
             StringBuilder val = new StringBuilder();
             for (String attribute : code.split(">")) {
@@ -618,7 +583,7 @@ public class TemporalInfoboxExtractor extends EnglishWikipediaExtractor {
     }
 
     public static Map<String, Set<String>> infoboxPatterns(FactCollection infoboxFacts) {
-        Map<String, Set<String>> patterns = new HashMap<String, Set<String>>();
+        Map<String, Set<String>> patterns = new HashMap<>();
         Announce.doing("Compiling infobox patterns");
         for (Fact fact : infoboxFacts.getFactsWithRelation("<_infoboxPattern>")) {
             D.addKeyValue(patterns, normalizeAttribute2(fact.getArgJavaString(1)), fact.getArg(2), TreeSet.class);
@@ -645,16 +610,6 @@ public class TemporalInfoboxExtractor extends EnglishWikipediaExtractor {
         for (Theme t : e.inputCached()) {
             t.assignToFolder(new File(folder));
         }
-        // new PatternHardExtractor(new File("./data")).extract(new
-        // File("/var/tmp/test/facts"), "test");
-        // new HardExtractor(new File("./basics2s/data")).extract(new
-        // File("/var/tmp/test/facts"), "test");
-        // new TemporalInfoboxExtractor(new
-        // File("/var/tmp/test/wikitest.xml")).extract(new
-        // File("/var/tmp/test/facts"), "Test on 1 wikipedia article");
-        // new TemporalInfoboxExtractor(new
-        // File("/var/tmp/Wikipedia_Archive/DavidBeckham.xml")).extract(new
-        // File("/var/tmp/test/facts"), "Test on 1 wikipedia article");
         e.extract(new File("./out"), "Test on 1 wikipedia article");
 
     }
