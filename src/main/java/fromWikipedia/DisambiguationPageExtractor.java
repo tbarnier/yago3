@@ -52,159 +52,162 @@ import java.util.Set;
 */
 public class DisambiguationPageExtractor extends MultilingualWikipediaExtractor {
 
-  private Map<String, Set<String>> types;
+    private Map<String, Set<String>> types;
 
-  private static final String LANGUAGE = "<wordnet_language_106282651>";
+    private static final String LANGUAGE = "<wordnet_language_106282651>";
 
-  @Override
-  public Set<Theme> input() {
-    return new HashSet<>(Arrays.asList(PatternHardExtractor.DISAMBIGUATIONTEMPLATES, PatternHardExtractor.LANGUAGECODEMAPPING,
-        TransitiveTypeSubgraphExtractor.YAGOTRANSITIVETYPE));
-  }
-
-  @Override
-  public Set<FollowUpExtractor> followUp() {
-    Set<FollowUpExtractor> result = new HashSet<FollowUpExtractor>();
-    result.add(new Redirector(DIRTYDISAMBIGUATIONMEANSFACTS.inLanguage(language), REDIRECTEDDISAMBIGUATIONMEANSFACTS.inLanguage(language), this));
-    if (!isEnglish()) {
-      result.add(new EntityTranslator(REDIRECTEDDISAMBIGUATIONMEANSFACTS.inLanguage(language),
-          TRANSLATEDREDIRECTEDDISAMBIGUATIONMEANSFACTS.inLanguage(language), this));
-      result.add(
-          new TypeChecker(TRANSLATEDREDIRECTEDDISAMBIGUATIONMEANSFACTS.inLanguage(language), DISAMBIGUATIONMEANSFACTS.inLanguage(language), this));
-    } else {
-      result.add(new TypeChecker(REDIRECTEDDISAMBIGUATIONMEANSFACTS.inLanguage(language), DISAMBIGUATIONMEANSFACTS.inLanguage(language), this));
+    @Override
+    public Set<Theme> input() {
+        return new HashSet<>(Arrays.asList(PatternHardExtractor.DISAMBIGUATIONTEMPLATES, PatternHardExtractor.LANGUAGECODEMAPPING,
+                TransitiveTypeSubgraphExtractor.YAGOTRANSITIVETYPE));
     }
-    return result;
-  }
 
-  /** Means facts from disambiguation pages */
-  public static final MultilingualTheme DIRTYDISAMBIGUATIONMEANSFACTS = new MultilingualTheme("disambiguationMeansFactsDirty",
-      "Means facts from disambiguation pages - needs redirecting and translation, typechecking");
+    @Override
+    public Set<FollowUpExtractor> followUp() {
+        Set<FollowUpExtractor> result = new HashSet<FollowUpExtractor>();
+        result.add(new Redirector(DIRTYDISAMBIGUATIONMEANSFACTS.inLanguage(language), REDIRECTEDDISAMBIGUATIONMEANSFACTS.inLanguage(language), this));
+        if (!isEnglish()) {
+            result.add(new EntityTranslator(REDIRECTEDDISAMBIGUATIONMEANSFACTS.inLanguage(language),
+                    TRANSLATEDREDIRECTEDDISAMBIGUATIONMEANSFACTS.inLanguage(language), this));
+            result.add(new TypeChecker(TRANSLATEDREDIRECTEDDISAMBIGUATIONMEANSFACTS.inLanguage(language),
+                    DISAMBIGUATIONMEANSFACTS.inLanguage(language), this));
+        }
+        else {
+            result.add(new TypeChecker(REDIRECTEDDISAMBIGUATIONMEANSFACTS.inLanguage(language), DISAMBIGUATIONMEANSFACTS.inLanguage(language), this));
+        }
+        return result;
+    }
 
-  /** Means facts from disambiguation pages */
-  public static final MultilingualTheme REDIRECTEDDISAMBIGUATIONMEANSFACTS = new MultilingualTheme("disambiguationMeansFactsRedirected",
-      "Means facts from disambiguation pages - needs translation and typechecking");
+    /** Means facts from disambiguation pages */
+    public static final MultilingualTheme DIRTYDISAMBIGUATIONMEANSFACTS = new MultilingualTheme("disambiguationMeansFactsDirty",
+            "Means facts from disambiguation pages - needs redirecting and translation, typechecking");
 
-  /** Means facts from disambiguation pages */
-  public static final MultilingualTheme TRANSLATEDREDIRECTEDDISAMBIGUATIONMEANSFACTS = new MultilingualTheme("disambiguationMeansFactsTranslated",
-      "Means facts from disambiguation pages - needs translation and typechecking");
+    /** Means facts from disambiguation pages */
+    public static final MultilingualTheme REDIRECTEDDISAMBIGUATIONMEANSFACTS = new MultilingualTheme("disambiguationMeansFactsRedirected",
+            "Means facts from disambiguation pages - needs translation and typechecking");
 
-  /** Means facts from disambiguation pages */
-  public static final MultilingualTheme DISAMBIGUATIONMEANSFACTS = new MultilingualTheme("disambiguationMeansFacts",
-      "Means facts from disambiguation pages");
+    /** Means facts from disambiguation pages */
+    public static final MultilingualTheme TRANSLATEDREDIRECTEDDISAMBIGUATIONMEANSFACTS = new MultilingualTheme("disambiguationMeansFactsTranslated",
+            "Means facts from disambiguation pages - needs translation and typechecking");
 
-  @Override
-  public Set<Theme> output() {
-    return new FinalSet<>(DIRTYDISAMBIGUATIONMEANSFACTS.inLanguage(language));
-  }
+    /** Means facts from disambiguation pages */
+    public static final MultilingualTheme DISAMBIGUATIONMEANSFACTS = new MultilingualTheme("disambiguationMeansFacts",
+            "Means facts from disambiguation pages");
 
-  @Override
-  public void extract() throws Exception {
-    // Extract the information
-    Announce.doing("Extracting disambiguation means");
+    @Override
+    public Set<Theme> output() {
+        return new FinalSet<>(DIRTYDISAMBIGUATIONMEANSFACTS.inLanguage(language));
+    }
 
-    // Needed for checking constraints
-    types = TransitiveTypeSubgraphExtractor.getSubjectToTypes();
+    @Override
+    public void extract() throws Exception {
+        // Extract the information
+        Announce.doing("Extracting disambiguation means");
 
-    BufferedReader in = FileUtils.getBufferedUTF8Reader(wikipedia);
+        // Needed for checking constraints
+        types = TransitiveTypeSubgraphExtractor.getSubjectToTypes();
 
-    FactCollection disambiguationPatternCollection = PatternHardExtractor.DISAMBIGUATIONTEMPLATES.factCollection();
-    FactTemplateExtractor disambiguationPatterns = new FactTemplateExtractor(disambiguationPatternCollection, "<_disambiguationPattern>");
-    Set<String> templates = disambiguationTemplates(disambiguationPatternCollection);
+        BufferedReader in = FileUtils.getBufferedUTF8Reader(wikipedia);
 
-    String titleEntity = null;
-    String page = null;
+        FactCollection disambiguationPatternCollection = PatternHardExtractor.DISAMBIGUATIONTEMPLATES.factCollection();
+        FactTemplateExtractor disambiguationPatterns = new FactTemplateExtractor(disambiguationPatternCollection, "<_disambiguationPattern>");
+        Set<String> templates = disambiguationTemplates(disambiguationPatternCollection);
 
-    while (true) {
-      switch (FileLines.findIgnoreCase(in, "<title>")) {
-        case -1:
-          Announce.done();
-          in.close();
-          return;
-        case 0:
-          titleEntity = FileLines.readToBoundary(in, "</title>");
-          titleEntity = cleanDisambiguationEntity(titleEntity);
-          page = FileLines.readBetween(in, "<text", "</text>");
+        String titleEntity = null;
+        String page = null;
 
-          if (titleEntity == null || page == null) continue;
+        while (true) {
+            switch (FileLines.findIgnoreCase(in, "<title>")) {
+                case -1:
+                    Announce.done();
+                    in.close();
+                    return;
+                case 0:
+                    titleEntity = FileLines.readToBoundary(in, "</title>");
+                    titleEntity = cleanDisambiguationEntity(titleEntity);
+                    page = FileLines.readBetween(in, "<text", "</text>");
 
-          if (isDisambiguationPage(page, templates)) {
-            for (Fact fact : disambiguationPatterns.extract(page, titleEntity, language)) {
-              if (fact != null && !hasLanguageAsSubject(fact)) DIRTYDISAMBIGUATIONMEANSFACTS.inLanguage(language).write(fact);
+                    if (titleEntity == null || page == null)
+                        continue;
+
+                    if (isDisambiguationPage(page, templates)) {
+                        for (Fact fact : disambiguationPatterns.extract(page, titleEntity, language)) {
+                            if (fact != null && !hasLanguageAsSubject(fact))
+                                DIRTYDISAMBIGUATIONMEANSFACTS.inLanguage(language).write(fact);
+                        }
+                    }
             }
-          }
-      }
-    }
-  }
-
-  private boolean hasLanguageAsSubject(Fact fact) {
-    Set<String> subjectTypes = types.get(fact.getSubject());
-    return subjectTypes != null && subjectTypes.contains(LANGUAGE);
-  }
-
-  protected static String cleanDisambiguationEntity(String titleEntity) {
-    // Remove the () part of the title. Should work for all languages
-    // and other disambiguation-style pages like names.
-    return FactComponent.stripQualifier(titleEntity);
-
-    //		if (titleEntity.indexOf("(disambiguation)") > -1) {
-    //			titleEntity = titleEntity.substring(0,
-    //					titleEntity.indexOf("(disambiguation)")).trim();
-    //		} else if (titleEntity.indexOf("(توضيح)") > -1) {//for Arabic
-    //		  titleEntity = titleEntity.substring(0,
-    //          titleEntity.indexOf("(توضيح)")).trim();
-    //		} else if (titleEntity.indexOf("(Begriffsklärung)") > -1) {
-    //      titleEntity = titleEntity.substring(0,
-    //          titleEntity.indexOf("(Begriffsklärung)")).trim();
-    //		}
-    //		return titleEntity;
-  }
-
-  /** Returns the set of disambiguation templates */
-  public static Set<String> disambiguationTemplates(FactCollection disambiguationTemplates) {
-    return (disambiguationTemplates.seekStringsOfType("<_yagoDisambiguationTemplate>"));
-  }
-
-  private boolean isDisambiguationPage(String page, Set<String> templates) {
-    for (String templName : templates) {
-      if (page.contains(templName) || page.contains(templName.toLowerCase())) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Needs Wikipedia as input
-   * 
-   * @param wikipedia
-   *            Wikipedia XML dump
-   */
-  public DisambiguationPageExtractor(String lang, File wikipedia) {
-    super(lang, wikipedia);
-  }
-
-  public static void main(String[] args) throws Exception {
-    String s = "Regular Title";
-    String correct = "Regular Title";
-    s = DisambiguationPageExtractor.cleanDisambiguationEntity(s);
-    if (!s.equals(correct)) {
-      System.out.println("Expected: " + correct + ". Value: " + s);
+        }
     }
 
-    s = "Regular Title (disambiguation)";
-    s = DisambiguationPageExtractor.cleanDisambiguationEntity(s);
-    if (!s.equals(correct)) {
-      System.out.println("Expected: " + correct + ". Value: " + s);
+    private boolean hasLanguageAsSubject(Fact fact) {
+        Set<String> subjectTypes = types.get(fact.getSubject());
+        return subjectTypes != null && subjectTypes.contains(LANGUAGE);
     }
 
-    s = "Regular Title (disambiguation). ";
-    s = DisambiguationPageExtractor.cleanDisambiguationEntity(s);
-    if (!s.equals(correct)) {
-      System.out.println("Expected: " + correct + ". Value: " + s);
+    protected static String cleanDisambiguationEntity(String titleEntity) {
+        // Remove the () part of the title. Should work for all languages
+        // and other disambiguation-style pages like names.
+        return FactComponent.stripQualifier(titleEntity);
+
+        //		if (titleEntity.indexOf("(disambiguation)") > -1) {
+        //			titleEntity = titleEntity.substring(0,
+        //					titleEntity.indexOf("(disambiguation)")).trim();
+        //		} else if (titleEntity.indexOf("(توضيح)") > -1) {//for Arabic
+        //		  titleEntity = titleEntity.substring(0,
+        //          titleEntity.indexOf("(توضيح)")).trim();
+        //		} else if (titleEntity.indexOf("(Begriffsklärung)") > -1) {
+        //      titleEntity = titleEntity.substring(0,
+        //          titleEntity.indexOf("(Begriffsklärung)")).trim();
+        //		}
+        //		return titleEntity;
     }
 
-    System.out.println("Done.");
-  }
+    /** Returns the set of disambiguation templates */
+    public static Set<String> disambiguationTemplates(FactCollection disambiguationTemplates) {
+        return (disambiguationTemplates.seekStringsOfType("<_yagoDisambiguationTemplate>"));
+    }
+
+    private boolean isDisambiguationPage(String page, Set<String> templates) {
+        for (String templName : templates) {
+            if (page.contains(templName) || page.contains(templName.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Needs Wikipedia as input
+     * 
+     * @param wikipedia
+     *            Wikipedia XML dump
+     */
+    public DisambiguationPageExtractor(String lang, File wikipedia) {
+        super(lang, wikipedia);
+    }
+
+    public static void main(String[] args) throws Exception {
+        String s = "Regular Title";
+        String correct = "Regular Title";
+        s = DisambiguationPageExtractor.cleanDisambiguationEntity(s);
+        if (!s.equals(correct)) {
+            System.out.println("Expected: " + correct + ". Value: " + s);
+        }
+
+        s = "Regular Title (disambiguation)";
+        s = DisambiguationPageExtractor.cleanDisambiguationEntity(s);
+        if (!s.equals(correct)) {
+            System.out.println("Expected: " + correct + ". Value: " + s);
+        }
+
+        s = "Regular Title (disambiguation). ";
+        s = DisambiguationPageExtractor.cleanDisambiguationEntity(s);
+        if (!s.equals(correct)) {
+            System.out.println("Expected: " + correct + ". Value: " + s);
+        }
+
+        System.out.println("Done.");
+    }
 
 }

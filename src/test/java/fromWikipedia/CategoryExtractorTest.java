@@ -1,4 +1,4 @@
-package test.fromWikipedia;
+package fromWikipedia;
 
 import java.io.File;
 import java.io.IOException;

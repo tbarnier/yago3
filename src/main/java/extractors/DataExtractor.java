@@ -22,6 +22,7 @@ along with YAGO.  If not, see <http://www.gnu.org/licenses/>.
 package extractors;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 
 import javatools.administrative.Announce;
 
@@ -36,38 +37,41 @@ import javatools.administrative.Announce;
 
 public abstract class DataExtractor extends Extractor {
 
-  /** The file or folder from which we read */
-  public final File inputData;
+    /** The file or folder from which we read */
+    public final File inputData;
 
-  public DataExtractor(File input) {
-    inputData = input;
-    if (!inputData.exists()) throw new RuntimeException("Input file does not exist for " + this.getClass() + ": " + inputData);
-  }
+    public DataExtractor(File input) throws FileNotFoundException {
+        inputData = input;
+        if (!inputData.exists())
+            throw new FileNotFoundException("Input file does not exist for " + this.getClass() + ": " + inputData);
+    }
 
-  /** Creates an extractor given by name */
-  public static Extractor forName(Class<DataExtractor> className, File datainput) {
-    Extractor extractor = null;
-    if (datainput == null) {
-      Announce.doing("Creating extractor", className + "(default)");
-      try {
-        extractor = className.getConstructor().newInstance();
+    /** Creates an extractor given by name */
+    public static Extractor forName(Class<DataExtractor> className, File datainput) {
+        Extractor extractor = null;
+        if (datainput == null) {
+            Announce.doing("Creating extractor", className + "(default)");
+            try {
+                extractor = className.getConstructor().newInstance();
+                Announce.done();
+                return (extractor);
+            }
+            catch (Exception ex) {
+                throw new RuntimeException("No data input, and no default constructor for " + className + ". Exception: " + ex);
+            }
+        }
+        Announce.doing("Creating extractor", className + "(" + datainput + ")");
+        if (!datainput.exists()) {
+            throw new RuntimeException("File or folder not found: " + datainput);
+        }
+        try {
+            extractor = className.getConstructor(File.class).newInstance(datainput);
+        }
+        catch (Exception ex) {
+            Announce.error(ex);
+        }
         Announce.done();
         return (extractor);
-      } catch (Exception ex) {
-        throw new RuntimeException("No data input, and no default constructor for " + className + ". Exception: " + ex);
-      }
     }
-    Announce.doing("Creating extractor", className + "(" + datainput + ")");
-    if (!datainput.exists()) {
-      throw new RuntimeException("File or folder not found: " + datainput);
-    }
-    try {
-      extractor = className.getConstructor(File.class).newInstance(datainput);
-    } catch (Exception ex) {
-      Announce.error(ex);
-    }
-    Announce.done();
-    return (extractor);
-  }
 
 }

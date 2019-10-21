@@ -58,41 +58,41 @@ import utils.Theme.ThemeGroup;
 
 public class SourceExtractor extends Extractor {
 
-  @Override
-  public Set<Theme> input() {
-    Set<Theme> input = new HashSet<Theme>(
-        Arrays.asList(PersonNameExtractor.PERSONNAMESOURCES, RuleExtractor.RULESOURCES, WikidataLabelExtractor.WIKIPEDIALABELSOURCES,
-            WikidataLabelExtractor.WIKIDATAMULTILABELSOURCES, GeoNamesClassMapper.GEONAMESSOURCES, FlightExtractor.FLIGHTSOURCE,
-            GenderNameExtractor.GENDERSOURCES, WordnetDomainExtractor.WORDNETDOMAINSOURCES, TemporalInfoboxExtractor.TEMPORALINFOBOXSOURCES));
-    input.add(CoordinateExtractor.COORDINATE_SOURCES);
-    input.addAll(GenderExtractor.GENDERBYPRONOUNSOURCES.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    input.addAll(InfoboxMapper.INFOBOXSOURCES.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    input.addAll(InfoboxTypeExtractor.INFOBOXTYPESOURCES.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    input.addAll(CategoryMapper.CATEGORYSOURCES.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    input.addAll(CategoryTypeExtractor.CATEGORYTYPESOURCES.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    return input;
-  }
-
-  /** All source facts of YAGO */
-  public static final Theme YAGOSOURCES = new Theme("yagoSources", "All sources of YAGO facts", ThemeGroup.META);
-
-  @Override
-  public Set<Theme> output() {
-    return new FinalSet<>(YAGOSOURCES);
-  }
-
-  @Override
-  public void extract() throws Exception {
-    Announce.doing("Extracting sources");
-    for (Theme theme : input()) {
-      Announce.doing("Extracting sources from", theme);
-      for (Fact fact : theme) {
-        if (fact.getRelation().equals(YAGO.extractionSource) || fact.getRelation().equals(YAGO.extractionTechnique)) {
-          YAGOSOURCES.write(fact);
-        }
-      }
-      Announce.done();
+    @Override
+    public Set<Theme> input() {
+        Set<Theme> input = new HashSet<Theme>(Arrays.asList(PersonNameExtractor.PERSONNAMESOURCES, RuleExtractor.RULESOURCES,
+                WikidataLabelExtractor.WIKIPEDIALABELSOURCES, WikidataLabelExtractor.WIKIDATAMULTILABELSOURCES, GeoNamesClassMapper.GEONAMESSOURCES,
+                FlightExtractor.FLIGHTSOURCE, GenderNameExtractor.GENDERSOURCES, WordnetDomainExtractor.WORDNETDOMAINSOURCES,
+                TemporalInfoboxExtractor.TEMPORALINFOBOXSOURCES));
+        input.add(CoordinateExtractor.COORDINATE_SOURCES);
+        input.addAll(GenderExtractor.GENDERBYPRONOUNSOURCES.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        input.addAll(InfoboxMapper.INFOBOXSOURCES.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        input.addAll(InfoboxTypeExtractor.INFOBOXTYPESOURCES.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        input.addAll(CategoryMapper.CATEGORYSOURCES.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        input.addAll(CategoryTypeExtractor.CATEGORYTYPESOURCES.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        return input;
     }
-    Announce.done();
-  }
+
+    /** All source facts of YAGO */
+    public static final Theme YAGOSOURCES = new Theme("yagoSources", "All sources of YAGO facts", ThemeGroup.META);
+
+    @Override
+    public Set<Theme> output() {
+        return new FinalSet<>(YAGOSOURCES);
+    }
+
+    @Override
+    public void extract() throws Exception {
+        Announce.doing("Extracting sources");
+        for (Theme theme : input()) {
+            Announce.doing("Extracting sources from", theme);
+            for (Fact fact : theme) {
+                if (fact.getRelation().equals(YAGO.extractionSource) || fact.getRelation().equals(YAGO.extractionTechnique)) {
+                    YAGOSOURCES.write(fact);
+                }
+            }
+            Announce.done();
+        }
+        Announce.done();
+    }
 }

@@ -22,7 +22,6 @@ along with YAGO.  If not, see <http://www.gnu.org/licenses/>.
 package utils.termParsers;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -39,31 +38,33 @@ import javatools.administrative.Announce;
 */
 public class UrlParser extends TermParser {
 
-  // also needs to match \ for yago-encoded stuff
-  private static Pattern urlPatternWithProtocol = Pattern.compile("(http[s]?)://([-\\w\\./\\\\]+)");
-  private static Pattern urlPatternNoProtocol = Pattern.compile("(www\\.[-\\w\\./\\\\]+)");
+    // also needs to match \ for yago-encoded stuff
+    private static Pattern urlPatternWithProtocol = Pattern.compile("(http[s]?)://([-\\w\\./\\\\]+)");
 
-  @Override
-  public List<String> extractList(String s) {
-    List<String> urls = new ArrayList<String>(3);
+    private static Pattern urlPatternNoProtocol = Pattern.compile("(www\\.[-\\w\\./\\\\]+)");
 
-    Matcher m = urlPatternWithProtocol.matcher(s);
-    while (m.find()) {
-      String url = FactComponent.forUri(m.group(1) + "://" + m.group(2));
-      urls.add(url);
+    @Override
+    public List<String> extractList(String s) {
+        List<String> urls = new ArrayList<>(3);
+
+        Matcher m = urlPatternWithProtocol.matcher(s);
+        while (m.find()) {
+            String url = FactComponent.forUri(m.group(1) + "://" + m.group(2));
+            urls.add(url);
+        }
+
+        // Only check for no protocol as fallback.
+        if (urls.isEmpty()) {
+            m = urlPatternNoProtocol.matcher(s);
+            while (m.find()) {
+                // Use http as default protocol.
+                String url = FactComponent.forUri("http://" + m.group(1));
+                urls.add(url);
+            }
+        }
+
+        if (urls.isEmpty())
+            Announce.debug("Could not find URL in", s);
+        return urls;
     }
-
-    // Only check for no protocol as fallback.
-    if (urls.isEmpty()) {
-      m = urlPatternNoProtocol.matcher(s);
-      while (m.find()) {
-        // Use http as default protocol.
-        String url = FactComponent.forUri("http://" + m.group(1));
-        urls.add(url);
-      }
-    }
-
-    if (urls.size() == 0) Announce.debug("Could not find URL in", s);
-    return urls;
-  }
 }

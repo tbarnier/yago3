@@ -48,72 +48,73 @@ import java.util.Set;
 
 public class AIDAOneShotExtractor extends SimpleDeduplicator {
 
-  @Override
-  @Fact.ImplementationNote("Hardwired facts go first. Infoboxes should go before categories")
-  public List<Theme> inputOrdered() {
-    List<Theme> input = new ArrayList<Theme>();
+    @Override
+    @Fact.ImplementationNote("Hardwired facts go first. Infoboxes should go before categories")
+    public List<Theme> inputOrdered() {
+        List<Theme> input = new ArrayList<Theme>();
 
-    // For YAGO compliance.
-    input.add(SchemaExtractor.YAGOSCHEMA);
+        // For YAGO compliance.
+        input.add(SchemaExtractor.YAGOSCHEMA);
 
-    // Dictionary.
-    input.addAll(StructureExtractor.STRUCTUREFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages)); // also gives links and anchor texts.
-    input.addAll(DisambiguationPageExtractor.DISAMBIGUATIONMEANSFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    input.add(PersonNameExtractor.PERSONNAMES);
-    input.add(PersonNameExtractor.PERSONNAMEHEURISTICS);
-    input.addAll(RedirectExtractor.REDIRECTFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    input.addAll(GenderExtractor.GENDERBYPRONOUN.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    input.add(WikidataLabelExtractor.WIKIPEDIALABELS);
-    input.add(WikidataLabelExtractor.WIKIDATAMULTILABELS);
-    input.add(HardExtractor.HARDWIREDFACTS);
+        // Dictionary.
+        input.addAll(StructureExtractor.STRUCTUREFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages)); // also gives links and anchor texts.
+        input.addAll(DisambiguationPageExtractor.DISAMBIGUATIONMEANSFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        input.add(PersonNameExtractor.PERSONNAMES);
+        input.add(PersonNameExtractor.PERSONNAMEHEURISTICS);
+        input.addAll(RedirectExtractor.REDIRECTFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        input.addAll(GenderExtractor.GENDERBYPRONOUN.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        input.add(WikidataLabelExtractor.WIKIPEDIALABELS);
+        input.add(WikidataLabelExtractor.WIKIDATAMULTILABELS);
+        input.add(HardExtractor.HARDWIREDFACTS);
 
-    // Metadata.
-    input.addAll(WikiInfoExtractor.WIKIINFO.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        // Metadata.
+        input.addAll(WikiInfoExtractor.WIKIINFO.inLanguages(MultilingualExtractor.wikipediaLanguages));
 
-    // Types and Taxonomy.
-    input.add(TransitiveTypeSubgraphExtractor.YAGOTRANSITIVETYPE);
-    input.add(ClassExtractor.YAGOTAXONOMY);
+        // Types and Taxonomy.
+        input.add(TransitiveTypeSubgraphExtractor.YAGOTRANSITIVETYPE);
+        input.add(ClassExtractor.YAGOTAXONOMY);
 
-    // Keyphrases.
-    input.addAll(ConteXtExtractor.CONTEXTFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    input.addAll(CategoryExtractor.CATEGORYMEMBERS.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    return input;
-  }
-
-  /** All facts of YAGO */
-  public static final Theme AIDAFACTS = new Theme("aidaFactsOneShot", "All facts necessary for AIDA", ThemeGroup.OTHER);
-
-  /** All facts of YAGO */
-  public static final Theme AIDACONFLICTS = new Theme("_aidaFactConflicts",
-      "Facts that were not added because they conflicted with an existing fact");
-
-  /** Relations that AIDA needs. */
-  public static final Set<String> relations = new FinalSet<>(RDFS.type, RDFS.subclassOf, RDFS.label, "<hasGivenName>", "<hasFamilyName>",
-      "<hasGender>", "<hasAnchorText>", "<hasInternalWikipediaLinkTo>", "<redirectedFrom>", "<hasWikipediaUrl>", "<hasCitationTitle>",
-      "<hasWikipediaCategory>", "<hasWikipediaAnchorText>");
-
-  @Override
-  public Theme myOutput() {
-    return AIDAFACTS;
-  }
-
-  @Override
-  public Theme conflicts() {
-    return AIDACONFLICTS;
-  }
-
-  @Override
-  public boolean isMyRelation(Fact fact) {
-    if (relations.contains(fact.getRelation())) {
-      return true;
-    } else {
-      return false;
+        // Keyphrases.
+        input.addAll(ConteXtExtractor.CONTEXTFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        input.addAll(CategoryExtractor.CATEGORYMEMBERS.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        return input;
     }
-  }
 
-  public static void main(String[] args) throws Exception {
-    Announce.setLevel(Announce.Level.DEBUG);
-    new AIDAOneShotExtractor().extract(new File("C:/fabian/data/yago3"), "test");
-  }
+    /** All facts of YAGO */
+    public static final Theme AIDAFACTS = new Theme("aidaFactsOneShot", "All facts necessary for AIDA", ThemeGroup.OTHER);
+
+    /** All facts of YAGO */
+    public static final Theme AIDACONFLICTS = new Theme("_aidaFactConflicts",
+            "Facts that were not added because they conflicted with an existing fact");
+
+    /** Relations that AIDA needs. */
+    public static final Set<String> relations = new FinalSet<>(RDFS.type, RDFS.subclassOf, RDFS.label, "<hasGivenName>", "<hasFamilyName>",
+            "<hasGender>", "<hasAnchorText>", "<hasInternalWikipediaLinkTo>", "<redirectedFrom>", "<hasWikipediaUrl>", "<hasCitationTitle>",
+            "<hasWikipediaCategory>", "<hasWikipediaAnchorText>");
+
+    @Override
+    public Theme myOutput() {
+        return AIDAFACTS;
+    }
+
+    @Override
+    public Theme conflicts() {
+        return AIDACONFLICTS;
+    }
+
+    @Override
+    public boolean isMyRelation(Fact fact) {
+        if (relations.contains(fact.getRelation())) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        Announce.setLevel(Announce.Level.DEBUG);
+        new AIDAOneShotExtractor().extract(new File("C:/fabian/data/yago3"), "test");
+    }
 
 }

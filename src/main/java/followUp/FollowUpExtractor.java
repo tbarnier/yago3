@@ -34,47 +34,49 @@ import utils.Theme;
 
 public abstract class FollowUpExtractor extends Extractor {
 
-  /** This is the theme we want to check */
-  protected final Theme checkMe;
+    /** This is the theme we want to check */
+    protected final Theme checkMe;
 
-  /** This is the theme we produce */
-  protected final Theme checked;
+    /** This is the theme we produce */
+    protected final Theme checked;
 
-  /** Points to whoever created us */
-  protected final Extractor parent;
+    /** Points to whoever created us */
+    protected final Extractor parent;
 
-  @Override
-  public Set<Theme> output() {
-    return new FinalSet<>(checked);
-  }
-
-  @Override
-  public String name() {
-    if (parent != null) {
-      return String.format("%s:%s", super.name(), parent.name());
-    } else {
-      return super.name();
+    @Override
+    public Set<Theme> output() {
+        return new FinalSet<>(checked);
     }
-  }
 
-  protected FollowUpExtractor(Theme in, Theme out, Extractor parent) {
-    checkMe = in;
-    checked = out;
-    this.parent = parent;
-  }
-
-  /** Creates an extractor given by name */
-  public static FollowUpExtractor forName(Class<FollowUpExtractor> className, Theme in, Theme out) {
-    Announce.doing("Creating extractor", className + "(" + in + ", " + out + ")");
-    FollowUpExtractor extractor = null;
-    try {
-      extractor = className.getConstructor(Theme.class, Theme.class, Extractor.class).newInstance(in, out, null);
-
-    } catch (Exception ex) {
-      Announce.error(ex);
+    @Override
+    public String name() {
+        if (parent != null) {
+            return String.format("%s:%s", super.name(), parent.name());
+        }
+        else {
+            return super.name();
+        }
     }
-    Announce.done();
-    return (extractor);
-  }
+
+    protected FollowUpExtractor(Theme in, Theme out, Extractor parent) {
+        checkMe = in;
+        checked = out;
+        this.parent = parent;
+    }
+
+    /** Creates an extractor given by name */
+    public static FollowUpExtractor forName(Class<FollowUpExtractor> className, Theme in, Theme out) {
+        Announce.doing("Creating extractor", className + "(" + in + ", " + out + ")");
+        FollowUpExtractor extractor = null;
+        try {
+            extractor = className.getConstructor(Theme.class, Theme.class, Extractor.class).newInstance(in, out, null);
+
+        }
+        catch (Exception ex) {
+            Announce.error(ex);
+        }
+        Announce.done();
+        return (extractor);
+    }
 
 }

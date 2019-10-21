@@ -51,123 +51,127 @@ import java.util.TreeSet;
 
 public class CategoryExtractor extends MultilingualWikipediaExtractor {
 
-  public static final MultilingualTheme CATEGORYMEMBERS = new MultilingualTheme("categoryMembers",
-      "Facts about Wikipedia instances, derived from the Wikipedia categories, still to be translated");
+    public static final MultilingualTheme CATEGORYMEMBERS = new MultilingualTheme("categoryMembers",
+            "Facts about Wikipedia instances, derived from the Wikipedia categories, still to be translated");
 
-  public static final MultilingualTheme CATEGORYMEMBERS_TRANSLATED = new MultilingualTheme("categoryMembersTranslated",
-      "Category Members facts with translated subjects and objects");
-  
-  public static final MultilingualTheme CATEGORYMEMBERS_ENTITIES_TRANSLATED = new MultilingualTheme("categoryMembersEntitiesTranslated",
-      "Category Members facts with translated subjects");
-  
-  @Override
-  public Set<Theme> input() {
-    Set<Theme> input = new TreeSet<>();
-    input.add(PatternHardExtractor.TITLEPATTERNS);
-    input.add(DictionaryExtractor.CATEGORYWORDS);
-    input.add(RedirectExtractor.REDIRECT_FACTS_DIRTY.inLanguage(language));
-    if (!Extractor.includeConcepts) {
-      input.add(WordnetExtractor.PREFMEANINGS);
+    public static final MultilingualTheme CATEGORYMEMBERS_TRANSLATED = new MultilingualTheme("categoryMembersTranslated",
+            "Category Members facts with translated subjects and objects");
+
+    public static final MultilingualTheme CATEGORYMEMBERS_ENTITIES_TRANSLATED = new MultilingualTheme("categoryMembersEntitiesTranslated",
+            "Category Members facts with translated subjects");
+
+    @Override
+    public Set<Theme> input() {
+        Set<Theme> input = new TreeSet<>();
+        input.add(PatternHardExtractor.TITLEPATTERNS);
+        input.add(DictionaryExtractor.CATEGORYWORDS);
+        input.add(RedirectExtractor.REDIRECT_FACTS_DIRTY.inLanguage(language));
+        if (!Extractor.includeConcepts) {
+            input.add(WordnetExtractor.PREFMEANINGS);
+        }
+        return input;
     }
-    return input;
-  }
 
-  @Override
-  public Set<Theme> inputCached() {
-    Set<Theme> input = new TreeSet<>();
-    input.add(DictionaryExtractor.CATEGORYWORDS);
-    if (!Extractor.includeConcepts) {
-      input.add(WordnetExtractor.PREFMEANINGS);
+    @Override
+    public Set<Theme> inputCached() {
+        Set<Theme> input = new TreeSet<>();
+        input.add(DictionaryExtractor.CATEGORYWORDS);
+        if (!Extractor.includeConcepts) {
+            input.add(WordnetExtractor.PREFMEANINGS);
+        }
+        return input;
     }
-    return input;
-  }
 
-  @Override
-  public Set<Theme> output() {
-    Set<Theme> result = new TreeSet<>();
-    result.add(CATEGORYMEMBERS.inLanguage(this.language));
-    return result;
-  }
-
-  @Override
-  public Set<FollowUpExtractor> followUp() {
-    Set<FollowUpExtractor> followUps = new HashSet<>();
-    if (!isEnglish()) {
-      followUps.add(new CategoryTranslator(CATEGORYMEMBERS.inLanguage(this.language), CATEGORYMEMBERS_TRANSLATED.inLanguage(this.language), this));
-      followUps.add(new EntityTranslator(CATEGORYMEMBERS.inLanguage(this.language), CATEGORYMEMBERS_ENTITIES_TRANSLATED.inLanguage(this.language), this, true));
+    @Override
+    public Set<Theme> output() {
+        Set<Theme> result = new TreeSet<>();
+        result.add(CATEGORYMEMBERS.inLanguage(this.language));
+        return result;
     }
-    return followUps;
-  }
 
-  @Override
-  public void extract() throws Exception {
-    TitleExtractor titleExtractor = new TitleExtractor(language);
-
-    // Extract the information
-    // Announce.progressStart("Extracting", 3_900_000);
-    Reader in = FileUtils.getBufferedUTF8Reader(wikipedia);
-    String titleEntity = null;
-    
-    // Create a set from all objects of relation "<redirectedFrom>", which are the redirect pages.
-    // Since we do not want to add redirect entities to Yago entities, we need them to check against extracted entities.
-    // The reason for using REDIRECTFACTSDIRTY instead of REDIRECTFACTS is that the former is created in a follow up 
-    // extractor that is depending on the output of this class to remove non named entity words.
-    Set<String>  redirects = new HashSet<>();
-    Set<Fact> redirectFacts = RedirectExtractor.REDIRECT_FACTS_DIRTY.inLanguage(language).factCollection().getFactsWithRelation("<redirectedFrom>");
-    for(Fact f:redirectFacts) {
-      String entity = titleExtractor.createTitleEntity(FactComponent.stripQuotesAndLanguage(f.getObject()));
-      redirects.add(entity);
+    @Override
+    public Set<FollowUpExtractor> followUp() {
+        Set<FollowUpExtractor> followUps = new HashSet<>();
+        if (!isEnglish()) {
+            followUps.add(
+                    new CategoryTranslator(CATEGORYMEMBERS.inLanguage(this.language), CATEGORYMEMBERS_TRANSLATED.inLanguage(this.language), this));
+            followUps.add(new EntityTranslator(CATEGORYMEMBERS.inLanguage(this.language),
+                    CATEGORYMEMBERS_ENTITIES_TRANSLATED.inLanguage(this.language), this, true));
+        }
+        return followUps;
     }
-    
-    /**
-     * categoryWord holds the synonym of the word "Category" in different
-     * languages. It is needed to distinguish the category part in Wiki
-     * pages.
-     */
-    String categoryWord = DictionaryExtractor.CATEGORYWORDS.factCollection().getObject(FactComponent.forString(language), "<_hasCategoryWord>");
-    if (categoryWord == null) throw new Exception("Category word undefined in language " + language);
-    categoryWord = FactComponent.asJavaString(categoryWord);
-    while (true) {
-      switch (FileLines.findIgnoreCase(in, "<title>", "[[Category:", "[[" + categoryWord + ":", "<!--")) {
-        case -1:
-          // Announce.progressDone();
-          in.close();
-          return;
-        case 0:
-          // Announce.progressStep();
-          titleEntity = titleExtractor.getTitleEntity(in);
-          break;
-        case 1:
-        case 2:
-          if (titleEntity == null || redirects.contains(titleEntity)) {
-            continue;
-          }
-          @ImplementationNote("All of these weird characters can erroneously appear in category names. We cut them away.")
-          String category = FileLines.readTo(in, ']', '|', '{', '}').toString();
-          category = category.trim();
-          // There are sometimes categories of length 0
-          // This causes problems, so avoid them
-          if (category.length() >= 4 && !category.contains(":")) {
-            CATEGORYMEMBERS.inLanguage(language)
-                .write(new Fact(titleEntity, "<hasWikipediaCategory>", FactComponent.forForeignWikiCategory(category, language)));
-          }
-          break;
-        case 3:
-          FileLines.findIgnoreCase(in, "-->");
-          break;
-      }
+
+    @Override
+    public void extract() throws Exception {
+        TitleExtractor titleExtractor = new TitleExtractor(language);
+
+        // Extract the information
+        // Announce.progressStart("Extracting", 3_900_000);
+        Reader in = FileUtils.getBufferedUTF8Reader(wikipedia);
+        String titleEntity = null;
+
+        // Create a set from all objects of relation "<redirectedFrom>", which are the redirect pages.
+        // Since we do not want to add redirect entities to Yago entities, we need them to check against extracted entities.
+        // The reason for using REDIRECTFACTSDIRTY instead of REDIRECTFACTS is that the former is created in a follow up 
+        // extractor that is depending on the output of this class to remove non named entity words.
+        Set<String> redirects = new HashSet<>();
+        Set<Fact> redirectFacts = RedirectExtractor.REDIRECT_FACTS_DIRTY.inLanguage(language).factCollection()
+                .getFactsWithRelation("<redirectedFrom>");
+        for (Fact f : redirectFacts) {
+            String entity = titleExtractor.createTitleEntity(FactComponent.stripQuotesAndLanguage(f.getObject()));
+            redirects.add(entity);
+        }
+
+        /**
+         * categoryWord holds the synonym of the word "Category" in different
+         * languages. It is needed to distinguish the category part in Wiki
+         * pages.
+         */
+        String categoryWord = DictionaryExtractor.CATEGORYWORDS.factCollection().getObject(FactComponent.forString(language), "<_hasCategoryWord>");
+        if (categoryWord == null)
+            throw new Exception("Category word undefined in language " + language);
+        categoryWord = FactComponent.asJavaString(categoryWord);
+        while (true) {
+            switch (FileLines.findIgnoreCase(in, "<title>", "[[Category:", "[[" + categoryWord + ":", "<!--")) {
+                case -1:
+                    // Announce.progressDone();
+                    in.close();
+                    return;
+                case 0:
+                    // Announce.progressStep();
+                    titleEntity = titleExtractor.getTitleEntity(in);
+                    break;
+                case 1:
+                case 2:
+                    if (titleEntity == null || redirects.contains(titleEntity)) {
+                        continue;
+                    }
+                    @ImplementationNote("All of these weird characters can erroneously appear in category names. We cut them away.")
+                    String category = FileLines.readTo(in, ']', '|', '{', '}').toString();
+                    category = category.trim();
+                    // There are sometimes categories of length 0
+                    // This causes problems, so avoid them
+                    if (category.length() >= 4 && !category.contains(":")) {
+                        CATEGORYMEMBERS.inLanguage(language)
+                                .write(new Fact(titleEntity, "<hasWikipediaCategory>", FactComponent.forForeignWikiCategory(category, language)));
+                    }
+                    break;
+                case 3:
+                    FileLines.findIgnoreCase(in, "-->");
+                    break;
+            }
+        }
     }
-  }
 
-  public CategoryExtractor(String lang, File wikipedia) {
-    super(lang, wikipedia);
-  }
+    public CategoryExtractor(String lang, File wikipedia) {
+        super(lang, wikipedia);
+    }
 
-  public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
 
-    new CategoryExtractor("de", new File("C:/Fabian/data/wikipedia/wikitest_de.xml")).extract(new File("c:/fabian/data/yago3"),
-        "Test on 1 wikipedia article");
+        new CategoryExtractor("de", new File("C:/Fabian/data/wikipedia/wikitest_de.xml")).extract(new File("c:/fabian/data/yago3"),
+                "Test on 1 wikipedia article");
 
-  }
+    }
 
 }

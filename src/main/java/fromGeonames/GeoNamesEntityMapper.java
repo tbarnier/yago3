@@ -22,6 +22,7 @@ along with YAGO.  If not, see <http://www.gnu.org/licenses/>.
 package fromGeonames;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -47,62 +48,62 @@ import utils.Theme.ThemeGroup;
 */
 public class GeoNamesEntityMapper extends DataExtractor {
 
-  public static final String ENWIKI_PREFIX = "http://en.wikipedia.org/wiki/";
+    public static final String ENWIKI_PREFIX = "http://en.wikipedia.org/wiki/";
 
-  /**
-   * geonames entity links (need type-checking to make sure all entities are
-   * present).
-   */
-  public static final Theme DIRTYGEONAMESENTITYIDS = new Theme("geonamesEntityIdsDirty",
-      "IDs from GeoNames entities (might contain links to non-YAGO entities)", ThemeGroup.GEONAMES);
+    /**
+     * geonames entity links (need type-checking to make sure all entities are
+     * present).
+     */
+    public static final Theme DIRTYGEONAMESENTITYIDS = new Theme("geonamesEntityIdsDirty",
+            "IDs from GeoNames entities (might contain links to non-YAGO entities)", ThemeGroup.GEONAMES);
 
-  /** geonames entity links */
-  public static final Theme GEONAMESENTITYIDS = new Theme("yagoGeonamesEntityIds", "IDs from GeoNames entities", ThemeGroup.LINK);
+    /** geonames entity links */
+    public static final Theme GEONAMESENTITYIDS = new Theme("yagoGeonamesEntityIds", "IDs from GeoNames entities", ThemeGroup.LINK);
 
-  @Override
-  public Set<Theme> input() {
-    return new HashSet<Theme>();
-  }
-
-  @Override
-  public Set<Theme> output() {
-    return new FinalSet<Theme>(DIRTYGEONAMESENTITYIDS);
-  }
-
-  @Override
-  public Set<FollowUpExtractor> followUp() {
-    return new HashSet<FollowUpExtractor>(Arrays.asList(new TypeChecker(DIRTYGEONAMESENTITYIDS, GEONAMESENTITYIDS, this)));
-  }
-
-  @Override
-  public void extract() throws Exception {
-    for (String line : new FileLines(inputData, "UTF-8", "Reading GeoNames Wikipedia mappings")) {
-      String[] data = line.split("\t");
-
-      String lang = data[2];
-      if (lang.equals("link")) {
-        // Skip non-Wikipedia link alternate names.
-        String alternateName = data[3];
-        if (alternateName.startsWith(ENWIKI_PREFIX)) {
-          String geoEntity = FactComponent.forWikipediaURL(alternateName);
-          String geoId = data[1];
-          // Links missing in YAGO will be dropped by the
-          // type-checker.
-          DIRTYGEONAMESENTITYIDS.write(new Fact(geoEntity, RDFS.sameas, FactComponent.forUri(GeoNames.GEONAMES_NAMESPACE + geoId)));
-        }
-      }
+    @Override
+    public Set<Theme> input() {
+        return new HashSet<Theme>();
     }
-  }
 
-  public GeoNamesEntityMapper(File alternateNames) {
-    super(alternateNames);
-  }
+    @Override
+    public Set<Theme> output() {
+        return new FinalSet<Theme>(DIRTYGEONAMESENTITYIDS);
+    }
 
-  public GeoNamesEntityMapper() {
-    this(new File(Parameters.get("geonames") + "/" + "alternateNames.txt"));
-  }
+    @Override
+    public Set<FollowUpExtractor> followUp() {
+        return new HashSet<FollowUpExtractor>(Arrays.asList(new TypeChecker(DIRTYGEONAMESENTITYIDS, GEONAMESENTITYIDS, this)));
+    }
 
-  public static void main(String[] args) throws Exception {
-    new GeoNamesEntityMapper().extract(new File("c:/fabian/data/yago3"), "");
-  }
+    @Override
+    public void extract() throws Exception {
+        for (String line : new FileLines(inputData, "UTF-8", "Reading GeoNames Wikipedia mappings")) {
+            String[] data = line.split("\t");
+
+            String lang = data[2];
+            if (lang.equals("link")) {
+                // Skip non-Wikipedia link alternate names.
+                String alternateName = data[3];
+                if (alternateName.startsWith(ENWIKI_PREFIX)) {
+                    String geoEntity = FactComponent.forWikipediaURL(alternateName);
+                    String geoId = data[1];
+                    // Links missing in YAGO will be dropped by the
+                    // type-checker.
+                    DIRTYGEONAMESENTITYIDS.write(new Fact(geoEntity, RDFS.sameas, FactComponent.forUri(GeoNames.GEONAMES_NAMESPACE + geoId)));
+                }
+            }
+        }
+    }
+
+    public GeoNamesEntityMapper(File alternateNames) throws IOException {
+        super(alternateNames);
+    }
+
+    public GeoNamesEntityMapper() throws IOException {
+        this(new File(Parameters.get("geonames") + "/" + "alternateNames.txt"));
+    }
+
+    public static void main(String[] args) throws Exception {
+        new GeoNamesEntityMapper().extract(new File("c:/fabian/data/yago3"), "");
+    }
 }

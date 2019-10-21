@@ -44,35 +44,36 @@ import utils.Theme;
 */
 public class MetadataExtractor extends Extractor {
 
-  /** Our output */
-  public static final Theme METADATAFACTS = new Theme("yagoMetadataFacts", "The metadata facts of YAGO");
+    /** Our output */
+    public static final Theme METADATAFACTS = new Theme("yagoMetadataFacts", "The metadata facts of YAGO");
 
-  @Override
-  public Set<Theme> input() {
-    return new HashSet<>();
-  }
-
-  @Override
-  public Set<Theme> output() {
-    return (new FinalSet<>(METADATAFACTS));
-  }
-
-  @Override
-  public void extract() throws Exception {
-    Announce.doing("Storing metadata");
-
-    List<String> wikipedias = Parameters.getList("wikipedias");
-    int wikiId = 0;
-    for (String wikipedia : wikipedias) {
-      File wikipediaFile = new File(wikipedia);
-      String dumpName = wikipediaFile.getName();
-      METADATAFACTS.write(new Fact(FactComponent.forString("WikipediaSource_" + wikiId++), "<_yagoMetadata>", FactComponent.forString(dumpName)));
+    @Override
+    public Set<Theme> input() {
+        return new HashSet<>();
     }
 
-    TimeZone tz = TimeZone.getTimeZone("UTC");
-    DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
-    df.setTimeZone(tz);
-    String dateString = df.format(new Date());
-    METADATAFACTS.write(new Fact(FactComponent.forString("CreationDate"), "<_yagoMetadata>", FactComponent.forString(dateString)));
-  }
+    @Override
+    public Set<Theme> output() {
+        return (new FinalSet<>(METADATAFACTS));
+    }
+
+    @Override
+    public void extract() throws Exception {
+        Announce.doing("Storing metadata");
+
+        List<String> wikipedias = Parameters.getList("wikipedias");
+        int wikiId = 0;
+        for (String wikipedia : wikipedias) {
+            File wikipediaFile = new File(wikipedia);
+            String dumpName = wikipediaFile.getName();
+            METADATAFACTS
+                    .write(new Fact(FactComponent.forString("WikipediaSource_" + wikiId++), "<_yagoMetadata>", FactComponent.forString(dumpName)));
+        }
+
+        TimeZone tz = TimeZone.getTimeZone("UTC");
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
+        df.setTimeZone(tz);
+        String dateString = df.format(new Date());
+        METADATAFACTS.write(new Fact(FactComponent.forString("CreationDate"), "<_yagoMetadata>", FactComponent.forString(dateString)));
+    }
 }

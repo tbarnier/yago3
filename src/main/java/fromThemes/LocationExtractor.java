@@ -49,75 +49,78 @@ import utils.demonyms.LocationNames;
 */
 public class LocationExtractor extends Extractor {
 
-  public static final Theme CATEGORYLOCATIONS = new Theme("categoryLocations", "Locations extracted from categories", Theme.ThemeGroup.INTERNAL);
+    public static final Theme CATEGORYLOCATIONS = new Theme("categoryLocations", "Locations extracted from categories", Theme.ThemeGroup.INTERNAL);
 
-  public static final Theme CATEGORYLOCATIONSSOURCES = new Theme("categoryLocationsSources", "Sources for the locations extracted from categories");
+    public static final Theme CATEGORYLOCATIONSSOURCES = new Theme("categoryLocationsSources", "Sources for the locations extracted from categories");
 
-  @Override
-  public Set<Theme> input() {
-    Set<Theme> result = new TreeSet<>();
-    result.addAll(CategoryExtractor.CATEGORYMEMBERS.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    result.addAll(CategoryExtractor.CATEGORYMEMBERS_TRANSLATED.inLanguages(MultilingualExtractor.allLanguagesExceptEnglish()));
-    result.add(TransitiveTypeSubgraphExtractor.YAGOTRANSITIVETYPE);
-    return result;
-  }
-
-  @Override
-  public Set<Theme> output() {
-    return new FinalSet<>(CATEGORYLOCATIONS, CATEGORYLOCATIONSSOURCES);
-  }
-
-  @Override
-  public void extract() throws Exception {
-    Map<String, List<String>> catToLocations = new HashMap<>();
-    Map<String, Map<String, Integer>> entityToLocToCount = new HashMap<>();
-
-    LocationNames ln = new LocationNames();
-    ln.populate();
-
-    // count locations for entities 
-    for (Theme theme : input()) {
-      for (Fact f : theme) {
-        Map<String, Integer> locToCount = null;
-        List<String> locs = catToLocations.computeIfAbsent(f.getObject(), cat -> {
-          if (cat == null || cat.contains(" descent")) return Arrays.asList();
-          return ln.locations(cat);
-        });
-
-        for (String loc : locs) {
-          if (locToCount == null) {
-            locToCount = entityToLocToCount.computeIfAbsent(f.getSubject(), k -> new HashMap<>(1));
-          }
-          locToCount.merge(loc, 1, (a, b) -> a + b);
-        }
-      }
+    @Override
+    public Set<Theme> input() {
+        Set<Theme> result = new TreeSet<>();
+        result.addAll(CategoryExtractor.CATEGORYMEMBERS.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        result.addAll(CategoryExtractor.CATEGORYMEMBERS_TRANSLATED.inLanguages(MultilingualExtractor.allLanguagesExceptEnglish()));
+        result.add(TransitiveTypeSubgraphExtractor.YAGOTRANSITIVETYPE);
+        return result;
     }
 
-    for (Fact f : TransitiveTypeSubgraphExtractor.YAGOTRANSITIVETYPE) {
-      if (f.getRelation().equals(RDFS.type) && f.getObject().equals(YAGO.person)) {
-        Map<String, Integer> locToCount = entityToLocToCount.get(f.getSubject());
-        if (locToCount == null) continue;
-
-        // output most frequent location
-        int max = Collections.max(locToCount.values());
-        for (String loc : locToCount.keySet()) {
-          if (locToCount.get(loc) == max) {
-            Fact nf = new Fact(f.getSubject(), "<livedIn>", loc);
-            write(CATEGORYLOCATIONS, nf, CATEGORYLOCATIONSSOURCES, FactComponent.wikipediaURL(f.getSubject()), "LocationExtractor");
-          }
-        }
-      }
+    @Override
+    public Set<Theme> output() {
+        return new FinalSet<>(CATEGORYLOCATIONS, CATEGORYLOCATIONSSOURCES);
     }
 
-  }
+    @Override
+    public void extract() throws Exception {
+        Map<String, List<String>> catToLocations = new HashMap<>();
+        Map<String, Map<String, Integer>> entityToLocToCount = new HashMap<>();
 
-  public static void main(String[] args) throws Exception {
-    if (args.length == 0) args = new String[] { "../yago.ini" };
-    Parameters.init(args[0]);
-    File yago = Parameters.getFile("yagoFolder");
-    TransitiveTypeSubgraphExtractor.YAGOTRANSITIVETYPE.assignToFolder(yago);
-    ParallelCaller.createWikipediaList(Parameters.getList("languages"), Parameters.getList("wikipedias"));
-    new LocationExtractor().extract(yago, "test");
-  }
+        LocationNames ln = new LocationNames();
+        ln.populate();
+
+        // count locations for entities 
+        for (Theme theme : input()) {
+            for (Fact f : theme) {
+                Map<String, Integer> locToCount = null;
+                List<String> locs = catToLocations.computeIfAbsent(f.getObject(), cat -> {
+                    if (cat == null || cat.contains(" descent"))
+                        return Arrays.asList();
+                    return ln.locations(cat);
+                });
+
+                for (String loc : locs) {
+                    if (locToCount == null) {
+                        locToCount = entityToLocToCount.computeIfAbsent(f.getSubject(), k -> new HashMap<>(1));
+                    }
+                    locToCount.merge(loc, 1, (a, b) -> a + b);
+                }
+            }
+        }
+
+        for (Fact f : TransitiveTypeSubgraphExtractor.YAGOTRANSITIVETYPE) {
+            if (f.getRelation().equals(RDFS.type) && f.getObject().equals(YAGO.person)) {
+                Map<String, Integer> locToCount = entityToLocToCount.get(f.getSubject());
+                if (locToCount == null)
+                    continue;
+
+                // output most frequent location
+                int max = Collections.max(locToCount.values());
+                for (String loc : locToCount.keySet()) {
+                    if (locToCount.get(loc) == max) {
+                        Fact nf = new Fact(f.getSubject(), "<livedIn>", loc);
+                        write(CATEGORYLOCATIONS, nf, CATEGORYLOCATIONSSOURCES, FactComponent.wikipediaURL(f.getSubject()), "LocationExtractor");
+                    }
+                }
+            }
+        }
+
+    }
+
+    public static void main(String[] args) throws Exception {
+        if (args.length == 0)
+            args = new String[] { "../yago.ini" };
+        Parameters.init(args[0]);
+        File yago = Parameters.getFile("yagoFolder");
+        TransitiveTypeSubgraphExtractor.YAGOTRANSITIVETYPE.assignToFolder(yago);
+        ParallelCaller.createWikipediaList(Parameters.getList("languages"), Parameters.getList("wikipedias"));
+        new LocationExtractor().extract(yago, "test");
+    }
 
 }

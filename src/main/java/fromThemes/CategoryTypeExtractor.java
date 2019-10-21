@@ -42,57 +42,63 @@ import utils.Theme;
 */
 public class CategoryTypeExtractor extends MultilingualExtractor {
 
-  /** Sources for category facts */
-  public static final MultilingualTheme CATEGORYTYPESOURCES = new MultilingualTheme("categoryTypeSources",
-      "Sources for the classes derived from the Wikipedia categories, with their connection to the WordNet class hierarchy leaves");
+    /** Sources for category facts */
+    public static final MultilingualTheme CATEGORYTYPESOURCES = new MultilingualTheme("categoryTypeSources",
+            "Sources for the classes derived from the Wikipedia categories, with their connection to the WordNet class hierarchy leaves");
 
-  /** Types deduced from categories */
-  public static final MultilingualTheme CATEGORYTYPES = new MultilingualTheme("categoryTypes",
-      "The rdf:type facts of YAGO derived from the categories");
+    /** Types deduced from categories */
+    public static final MultilingualTheme CATEGORYTYPES = new MultilingualTheme("categoryTypes",
+            "The rdf:type facts of YAGO derived from the categories");
 
-  @Override
-  public Set<Theme> input() {
-    Set<Theme> result = new TreeSet<Theme>(Arrays.asList(CategoryClassExtractor.CATEGORYCLASSES));
-    if (isEnglish()) result.add(CategoryExtractor.CATEGORYMEMBERS.inLanguage(language));
-    else result.add(CategoryExtractor.CATEGORYMEMBERS_TRANSLATED.inLanguage(language));
-    return result;
-  }
-
-  @Override
-  public Set<Theme> inputCached() {
-    return new FinalSet<>(CategoryClassExtractor.CATEGORYCLASSES);
-  }
-
-  @Override
-  public Set<Theme> output() {
-    return new FinalSet<Theme>(CATEGORYTYPESOURCES.inLanguage(language), CATEGORYTYPES.inLanguage(language));
-  }
-
-  @Override
-  public void extract() throws Exception {
-    Set<String> validClasses = CategoryClassExtractor.CATEGORYCLASSES.factCollection().getSubjects();
-
-    FactSource categoryMembs;
-    if (isEnglish()) categoryMembs = CategoryExtractor.CATEGORYMEMBERS.inLanguage(language);
-    else categoryMembs = CategoryExtractor.CATEGORYMEMBERS_TRANSLATED.inLanguage(language);
-
-    // Extract the information
-    for (Fact f : categoryMembs) {
-      if (!f.getRelation().equals("<hasWikipediaCategory>")) continue;
-      String category = f.getObject();
-      if (!validClasses.contains(category)) continue;
-      write(CATEGORYTYPES.inLanguage(language), new Fact(f.getSubject(), "rdf:type", category), CATEGORYTYPESOURCES.inLanguage(language),
-          FactComponent.wikipediaSourceURL(f.getSubject(), language), "By membership in conceptual category");
+    @Override
+    public Set<Theme> input() {
+        Set<Theme> result = new TreeSet<Theme>(Arrays.asList(CategoryClassExtractor.CATEGORYCLASSES));
+        if (isEnglish())
+            result.add(CategoryExtractor.CATEGORYMEMBERS.inLanguage(language));
+        else
+            result.add(CategoryExtractor.CATEGORYMEMBERS_TRANSLATED.inLanguage(language));
+        return result;
     }
-    Announce.done();
-  }
 
-  public CategoryTypeExtractor(String lang) {
-    super(lang);
-  }
+    @Override
+    public Set<Theme> inputCached() {
+        return new FinalSet<>(CategoryClassExtractor.CATEGORYCLASSES);
+    }
 
-  public static void main(String[] args) throws Exception {
-    new CategoryTypeExtractor("en").extract(new File("c:/fabian/data/yago3"), "Test");
-  }
+    @Override
+    public Set<Theme> output() {
+        return new FinalSet<Theme>(CATEGORYTYPESOURCES.inLanguage(language), CATEGORYTYPES.inLanguage(language));
+    }
+
+    @Override
+    public void extract() throws Exception {
+        Set<String> validClasses = CategoryClassExtractor.CATEGORYCLASSES.factCollection().getSubjects();
+
+        FactSource categoryMembs;
+        if (isEnglish())
+            categoryMembs = CategoryExtractor.CATEGORYMEMBERS.inLanguage(language);
+        else
+            categoryMembs = CategoryExtractor.CATEGORYMEMBERS_TRANSLATED.inLanguage(language);
+
+        // Extract the information
+        for (Fact f : categoryMembs) {
+            if (!f.getRelation().equals("<hasWikipediaCategory>"))
+                continue;
+            String category = f.getObject();
+            if (!validClasses.contains(category))
+                continue;
+            write(CATEGORYTYPES.inLanguage(language), new Fact(f.getSubject(), "rdf:type", category), CATEGORYTYPESOURCES.inLanguage(language),
+                    FactComponent.wikipediaSourceURL(f.getSubject(), language), "By membership in conceptual category");
+        }
+        Announce.done();
+    }
+
+    public CategoryTypeExtractor(String lang) {
+        super(lang);
+    }
+
+    public static void main(String[] args) throws Exception {
+        new CategoryTypeExtractor("en").extract(new File("c:/fabian/data/yago3"), "Test");
+    }
 
 }

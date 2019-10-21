@@ -1,4 +1,4 @@
-package test.fromOtherSources;
+package fromOtherSources;
 
 import java.io.File;
 import java.io.IOException;

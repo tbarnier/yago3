@@ -22,6 +22,7 @@ along with YAGO.  If not, see <http://www.gnu.org/licenses/>.
 package fromOtherSources;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -48,57 +49,57 @@ import utils.Theme.ThemeGroup;
 */
 public class UWNImporter extends DataExtractor {
 
-  /** multi-lingual class names */
-  public static final Theme UWNDATA = new Theme("yagoMultilingualClassLabels", "Multi-lingual labels for classes from Universal WordNet",
-      ThemeGroup.MULTILINGUAL);
+    /** multi-lingual class names */
+    public static final Theme UWNDATA = new Theme("yagoMultilingualClassLabels", "Multi-lingual labels for classes from Universal WordNet",
+            ThemeGroup.MULTILINGUAL);
 
-  @Override
-  public Set<Theme> input() {
-    return new HashSet<Theme>(Arrays.asList(HardExtractor.HARDWIREDFACTS, WordnetExtractor.WORDNETIDS));
-  }
-
-  @Override
-  public Set<Theme> output() {
-    return new FinalSet<Theme>(UWNDATA);
-  }
-
-  @Override
-  public Set<Theme> inputCached() {
-    return new HashSet<Theme>(Arrays.asList(HardExtractor.HARDWIREDFACTS, WordnetExtractor.WORDNETIDS));
-  }
-
-  @Override
-  public void extract() throws Exception {
-    // get wordnet synset id mapping
-    Map<String, String> wnssm = WordnetExtractor.WORDNETIDS.factCollection().getReverseMap("<hasSynsetId>");
-    Map<String, String> tlc2language = HardExtractor.HARDWIREDFACTS.factCollection().getReverseMap("<hasThreeLetterLanguageCode>");
-
-    for (String line : new FileLines(inputData, "UTF-8", "Importing UWN mappings")) {
-      String data[] = line.split("\t");
-
-      String lang = tlc2language.get(FactComponent.forString(data[0]));
-      String name = FactComponent.forStringWithLanguage(data[1], data[0]);
-      String wordnetSynset = wnssm.get(FactComponent.forString(data[3]));
-
-      if (wordnetSynset == null) {
-        Announce.debug("No WordNet Synset for id " + data[3]);
-        continue;
-      }
-
-      if (lang == null) {
-        Announce.debug("No Wikipedia language for " + data[3]);
-        continue;
-      }
-
-      UWNDATA.write(new Fact(wordnetSynset, RDFS.label, name));
+    @Override
+    public Set<Theme> input() {
+        return new HashSet<Theme>(Arrays.asList(HardExtractor.HARDWIREDFACTS, WordnetExtractor.WORDNETIDS));
     }
-  }
 
-  public UWNImporter(File uwnNouns) {
-    super(uwnNouns);
-  }
+    @Override
+    public Set<Theme> output() {
+        return new FinalSet<Theme>(UWNDATA);
+    }
 
-  public UWNImporter() {
-    this(new File("./data/uwn4yago/uwn-nouns.tsv"));
-  }
+    @Override
+    public Set<Theme> inputCached() {
+        return new HashSet<Theme>(Arrays.asList(HardExtractor.HARDWIREDFACTS, WordnetExtractor.WORDNETIDS));
+    }
+
+    @Override
+    public void extract() throws Exception {
+        // get wordnet synset id mapping
+        Map<String, String> wnssm = WordnetExtractor.WORDNETIDS.factCollection().getReverseMap("<hasSynsetId>");
+        Map<String, String> tlc2language = HardExtractor.HARDWIREDFACTS.factCollection().getReverseMap("<hasThreeLetterLanguageCode>");
+
+        for (String line : new FileLines(inputData, "UTF-8", "Importing UWN mappings")) {
+            String data[] = line.split("\t");
+
+            String lang = tlc2language.get(FactComponent.forString(data[0]));
+            String name = FactComponent.forStringWithLanguage(data[1], data[0]);
+            String wordnetSynset = wnssm.get(FactComponent.forString(data[3]));
+
+            if (wordnetSynset == null) {
+                Announce.debug("No WordNet Synset for id " + data[3]);
+                continue;
+            }
+
+            if (lang == null) {
+                Announce.debug("No Wikipedia language for " + data[3]);
+                continue;
+            }
+
+            UWNDATA.write(new Fact(wordnetSynset, RDFS.label, name));
+        }
+    }
+
+    public UWNImporter(File uwnNouns) throws IOException {
+        super(uwnNouns);
+    }
+
+    public UWNImporter() throws IOException {
+        this(new File("./data/uwn4yago/uwn-nouns.tsv"));
+    }
 }

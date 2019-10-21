@@ -23,24 +23,24 @@ package fromOtherSources;
 
 public class ImageTypes {
 
-  /** Contains the types of images
-  
-  */
-  public static final String image = "P18";
+    /** Contains the types of images
+    
+    */
+    public static final String image = "P18";
 
-  public static final String imageOfGrave = "P1442";
+    public static final String imageOfGrave = "P1442";
 
-  public static final String coatOfArmsImage = "P94";
+    public static final String coatOfArmsImage = "P94";
 
-  public static final String signature = "P109";
+    public static final String signature = "P109";
 
-  public static final String logoImage = "P154";
+    public static final String logoImage = "P154";
 
-  public static final String locatorMapImage = "P242";
+    public static final String locatorMapImage = "P242";
 
-  public static final String detailMap = "P1621";
+    public static final String detailMap = "P1621";
 
-  public static final String flagImage = "P41";
+    public static final String flagImage = "P41";
 
-  public static final String sealImage = "P158";
+    public static final String sealImage = "P158";
 }

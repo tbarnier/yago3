@@ -42,81 +42,81 @@ import java.util.Set;
 */
 public class SPOTLXDeductiveExtractor extends BaseRuleExtractor {
 
-  private int maxRuleSetSize;
+    private int maxRuleSetSize;
 
-  public SPOTLXDeductiveExtractor(int maxRuleSize) {
-    maxRuleSetSize = maxRuleSize;
-  }
+    public SPOTLXDeductiveExtractor(int maxRuleSize) {
+        maxRuleSetSize = maxRuleSize;
+    }
 
-  public SPOTLXDeductiveExtractor() {
+    public SPOTLXDeductiveExtractor() {
+        /*
+         * Defaults to 0, which means the number of rules processed at once is
+         * unlimited
+         */
+        maxRuleSetSize = 0;
+    }
+
+    @Override
+    public int maxRuleSetSize() {
+        return maxRuleSetSize;
+    }
+
     /*
-     * Defaults to 0, which means the number of rules processed at once is
-     * unlimited
+     * Non follow-up extractors should not be declared as follow-up public
+     * Set<FollowUpExtractor> followUp() { return (new
+     * HashSet<FollowUpExtractor>( Arrays.asList(new SPOTLXDeduplicator()))); }
      */
-    maxRuleSetSize = 0;
-  }
 
-  @Override
-  public int maxRuleSetSize() {
-    return maxRuleSetSize;
-  }
+    @Override
+    public Set<Theme> input() {
+        return new FinalSet<>(PatternHardExtractor.HARDWIREDFACTS, PatternHardExtractor.SPOTLX_ENTITY_RULES, PatternHardExtractor.SPOTLX_FACT_RULES,
+                TransitiveTypeSubgraphExtractor.YAGOTRANSITIVETYPE, LabelExtractor.YAGOLABELS, SPOTLXRuleExtractor.RULERESULTS,
+                DateExtractor.YAGODATEFACTS, FactExtractor.YAGOFACTS, LiteralFactExtractor.YAGOLITERALFACTS);
+    }
 
-  /*
-   * Non follow-up extractors should not be declared as follow-up public
-   * Set<FollowUpExtractor> followUp() { return (new
-   * HashSet<FollowUpExtractor>( Arrays.asList(new SPOTLXDeduplicator()))); }
-   */
+    /** Themes of spotlx deductions */
+    public static final Theme RULERESULTS = new Theme("spotlxDeducedFacts", "SPOTLX deduced facts");
 
-  @Override
-  public Set<Theme> input() {
-    return new FinalSet<>(PatternHardExtractor.HARDWIREDFACTS, PatternHardExtractor.SPOTLX_ENTITY_RULES, PatternHardExtractor.SPOTLX_FACT_RULES,
-        TransitiveTypeSubgraphExtractor.YAGOTRANSITIVETYPE, LabelExtractor.YAGOLABELS, SPOTLXRuleExtractor.RULERESULTS, DateExtractor.YAGODATEFACTS,
-        FactExtractor.YAGOFACTS, LiteralFactExtractor.YAGOLITERALFACTS);
-  }
+    public static final Theme RULESOURCES = new Theme("spotlxDeducedSources", "SPOTLX deduced facts");
 
-  /** Themes of spotlx deductions */
-  public static final Theme RULERESULTS = new Theme("spotlxDeducedFacts", "SPOTLX deduced facts");
+    @Override
+    public Theme getRULERESULTS() {
+        return RULERESULTS;
+    }
 
-  public static final Theme RULESOURCES = new Theme("spotlxDeducedSources", "SPOTLX deduced facts");
+    @Override
+    public Theme getRULESOURCES() {
+        return RULESOURCES;
+    }
 
-  @Override
-  public Theme getRULERESULTS() {
-    return RULERESULTS;
-  }
+    @Override
+    public Set<Theme> output() {
+        return new FinalSet<>(RULERESULTS, RULESOURCES);
+    }
 
-  @Override
-  public Theme getRULESOURCES() {
-    return RULESOURCES;
-  }
+    @Override
+    public Set<Theme> inputCached() {
+        return new FinalSet<>(PatternHardExtractor.SPOTLX_FACT_RULES);
+    }
 
-  @Override
-  public Set<Theme> output() {
-    return new FinalSet<>(RULERESULTS, RULESOURCES);
-  }
+    @Override
+    public FactCollection getInputRuleCollection() throws Exception {
+        // FactSource spotlxRelationRules =
+        // input.get(PatternHardExtractor.SPOTLX_ENTITY_RULES);
+        // FactSource spotlxFactRules =
+        // input.get(PatternHardExtractor.SPOTLX_FACT_RULES);
+        // FactCollection collection = new FactCollection(spotlxFactRules);
+        // collection.load(spotlxFactRules);
+        return PatternHardExtractor.SPOTLX_FACT_RULES.factCollection();
+    }
 
-  @Override
-  public Set<Theme> inputCached() {
-    return new FinalSet<>(PatternHardExtractor.SPOTLX_FACT_RULES);
-  }
-
-  @Override
-  public FactCollection getInputRuleCollection() throws Exception {
-    // FactSource spotlxRelationRules =
-    // input.get(PatternHardExtractor.SPOTLX_ENTITY_RULES);
-    // FactSource spotlxFactRules =
-    // input.get(PatternHardExtractor.SPOTLX_FACT_RULES);
-    // FactCollection collection = new FactCollection(spotlxFactRules);
-    // collection.load(spotlxFactRules);
-    return PatternHardExtractor.SPOTLX_FACT_RULES.factCollection();
-  }
-
-  public static void main(String[] args) throws Exception {
-    Announce.setLevel(Announce.Level.DEBUG);
-    // new SPOTLXDeductiveExtractor(/*maxRuleSetSize*/1).extract(new
-    // File("/home/jbiega/data/yago2s"), "test");
-    new SPOTLXDeductiveExtractor(/* maxRuleSetSize */0).extract(new File("/home/jbiega/data/yago2s"), "test");
-    // new SPOTLXDeductiveExtractor().extract(new
-    // File("/local/jbiega/yagofacts"), "test");
-  }
+    public static void main(String[] args) throws Exception {
+        Announce.setLevel(Announce.Level.DEBUG);
+        // new SPOTLXDeductiveExtractor(/*maxRuleSetSize*/1).extract(new
+        // File("/home/jbiega/data/yago2s"), "test");
+        new SPOTLXDeductiveExtractor(/* maxRuleSetSize */0).extract(new File("/home/jbiega/data/yago2s"), "test");
+        // new SPOTLXDeductiveExtractor().extract(new
+        // File("/local/jbiega/yagofacts"), "test");
+    }
 
 }

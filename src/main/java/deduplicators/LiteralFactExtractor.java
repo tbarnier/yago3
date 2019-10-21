@@ -52,54 +52,56 @@ import utils.Theme.ThemeGroup;
 
 public class LiteralFactExtractor extends SimpleDeduplicator {
 
-  @Override
-  @Fact.ImplementationNote("Hardwired facts go first. Infoboxes should go before categories")
-  public List<Theme> inputOrdered() {
-    List<Theme> input = new ArrayList<>();
-    input.add(SchemaExtractor.YAGOSCHEMA);
-    input.add(HardExtractor.HARDWIREDFACTS);
-    input.add(CoordinateExtractor.COORDINATES);
-    input.addAll(InfoboxMapper.INFOBOXFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    input.addAll(CategoryMapper.CATEGORYFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    input.addAll(Arrays.asList(RuleExtractor.RULERESULTS,
-        //				TemporalCategoryExtractor.TEMPORALCATEGORYFACTS,
-        TemporalInfoboxExtractor.TEMPORALINFOBOXFACTS, GeoNamesDataImporter.GEONAMES_MAPPED_DATA));
-    return input;
-  }
+    @Override
+    @Fact.ImplementationNote("Hardwired facts go first. Infoboxes should go before categories")
+    public List<Theme> inputOrdered() {
+        List<Theme> input = new ArrayList<>();
+        input.add(SchemaExtractor.YAGOSCHEMA);
+        input.add(HardExtractor.HARDWIREDFACTS);
+        input.add(CoordinateExtractor.COORDINATES);
+        input.addAll(InfoboxMapper.INFOBOXFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        input.addAll(CategoryMapper.CATEGORYFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        input.addAll(Arrays.asList(RuleExtractor.RULERESULTS,
+                //				TemporalCategoryExtractor.TEMPORALCATEGORYFACTS,
+                TemporalInfoboxExtractor.TEMPORALINFOBOXFACTS, GeoNamesDataImporter.GEONAMES_MAPPED_DATA));
+        return input;
+    }
 
-  /** All facts of YAGO */
-  public static final Theme YAGOLITERALFACTS = new Theme("yagoLiteralFacts", "All facts of YAGO that contain literals (except labels)",
-      ThemeGroup.CORE);
+    /** All facts of YAGO */
+    public static final Theme YAGOLITERALFACTS = new Theme("yagoLiteralFacts", "All facts of YAGO that contain literals (except labels)",
+            ThemeGroup.CORE);
 
-  /** All facts of YAGO */
-  public static final Theme LITERALFACTCONFLICTS = new Theme("_literalFactConflicts",
-      "Literal facts that were not added because they conflicted with an existing fact");
+    /** All facts of YAGO */
+    public static final Theme LITERALFACTCONFLICTS = new Theme("_literalFactConflicts",
+            "Literal facts that were not added because they conflicted with an existing fact");
 
-  @Override
-  public Theme conflicts() {
-    return LITERALFACTCONFLICTS;
-  }
+    @Override
+    public Theme conflicts() {
+        return LITERALFACTCONFLICTS;
+    }
 
-  /** relations that we exclude, because they are treated elsewhere */
-  public static final Set<String> relationsExcluded = new FinalSet<>(RDFS.type, RDFS.subclassOf, RDFS.domain, RDFS.range, RDFS.subpropertyOf,
-      RDFS.label, "skos:prefLabel", "<isPreferredMeaningOf>", "<hasGivenName>", "<hasFamilyName>", "<hasGloss>", "<hasConfidence>",
-      "<redirectedFrom>", "<wasBornOnDate>", "<diedOnDate>", "<wasCreatedOnDate>", "<wasDestroyedOnDate>", "<happenedOnDate>", "<startedOnDate>",
-      "<endedOnDate>");
+    /** relations that we exclude, because they are treated elsewhere */
+    public static final Set<String> relationsExcluded = new FinalSet<>(RDFS.type, RDFS.subclassOf, RDFS.domain, RDFS.range, RDFS.subpropertyOf,
+            RDFS.label, "skos:prefLabel", "<isPreferredMeaningOf>", "<hasGivenName>", "<hasFamilyName>", "<hasGloss>", "<hasConfidence>",
+            "<redirectedFrom>", "<wasBornOnDate>", "<diedOnDate>", "<wasCreatedOnDate>", "<wasDestroyedOnDate>", "<happenedOnDate>",
+            "<startedOnDate>", "<endedOnDate>");
 
-  public static void main(String[] args) throws Exception {
-    Announce.setLevel(Announce.Level.DEBUG);
-    new LiteralFactExtractor().extract(new File("C:/fabian/data/yago2s"), "test");
-  }
+    public static void main(String[] args) throws Exception {
+        Announce.setLevel(Announce.Level.DEBUG);
+        new LiteralFactExtractor().extract(new File("C:/fabian/data/yago2s"), "test");
+    }
 
-  @Override
-  public Theme myOutput() {
-    return YAGOLITERALFACTS;
-  }
+    @Override
+    public Theme myOutput() {
+        return YAGOLITERALFACTS;
+    }
 
-  @Override
-  public boolean isMyRelation(Fact fact) {
-    if (fact.getRelation().startsWith("<_")) return (false);
-    if (relationsExcluded.contains(fact.getRelation())) return (false);
-    return (!FactComponent.isFactId(fact.getArg(1)) && FactComponent.isLiteral(fact.getArg(2)));
-  }
+    @Override
+    public boolean isMyRelation(Fact fact) {
+        if (fact.getRelation().startsWith("<_"))
+            return (false);
+        if (relationsExcluded.contains(fact.getRelation()))
+            return (false);
+        return (!FactComponent.isFactId(fact.getArg(1)) && FactComponent.isLiteral(fact.getArg(2)));
+    }
 }

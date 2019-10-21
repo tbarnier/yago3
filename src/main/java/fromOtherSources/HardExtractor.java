@@ -22,6 +22,8 @@ along with YAGO.  If not, see <http://www.gnu.org/licenses/>.
 package fromOtherSources;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -38,45 +40,48 @@ import utils.Theme;
 */
 public class HardExtractor extends DataExtractor {
 
-  /** Our output */
-  public static final Theme HARDWIREDFACTS = new Theme("hardWiredFacts", "The manually created facts of YAGO");
+    /** Our output */
+    public static final Theme HARDWIREDFACTS = new Theme("hardWiredFacts", "The manually created facts of YAGO");
 
-  @Override
-  public Set<Theme> output() {
-    return (new FinalSet<Theme>(HARDWIREDFACTS));
-  }
-
-  @Override
-  public void extract() throws Exception {
-    Announce.doing("Copying hard wired facts");
-    Announce.message("Input folder is", inputData);
-    for (File f : inputData.listFiles()) {
-      if (f.isDirectory() || f.getName().startsWith(".")) continue;
-      Announce.doing("Copying hard wired facts from", f.getName());
-      for (Fact fact : FactSource.from(f)) {
-        HARDWIREDFACTS.write(fact);
-      }
-      Announce.done();
+    @Override
+    public Set<Theme> output() {
+        return (new FinalSet<Theme>(HARDWIREDFACTS));
     }
-    Announce.done();
-  }
 
-  public HardExtractor(File inputFolder) {
-    super(inputFolder);
-    if (!inputFolder.exists()) throw new RuntimeException("Folder not found " + inputFolder);
-    if (!inputFolder.isDirectory()) throw new RuntimeException("Not a folder: " + inputFolder);
-  }
+    @Override
+    public void extract() throws Exception {
+        Announce.doing("Copying hard wired facts");
+        Announce.message("Input folder is", inputData);
+        for (File f : inputData.listFiles()) {
+            if (f.isDirectory() || f.getName().startsWith("."))
+                continue;
+            Announce.doing("Copying hard wired facts from", f.getName());
+            for (Fact fact : FactSource.from(f)) {
+                HARDWIREDFACTS.write(fact);
+            }
+            Announce.done();
+        }
+        Announce.done();
+    }
 
-  public HardExtractor() {
-    this(new File("schema"));
-  }
+    public HardExtractor(File inputFolder) throws IOException {
+        super(inputFolder);
+        if (!inputFolder.exists())
+            throw new FileNotFoundException("Folder not found " + inputFolder);
+        if (!inputFolder.isDirectory())
+            throw new FileNotFoundException("Not a folder: " + inputFolder);
+    }
 
-  @Override
-  public Set<Theme> input() {
-    return new TreeSet<Theme>();
-  }
+    public HardExtractor() throws IOException {
+        this(new File("schema"));
+    }
 
-  public static void main(String[] args) throws Exception {
-    new HardExtractor().extract(new File("c:/fabian/data/yago3"), "test");
-  }
+    @Override
+    public Set<Theme> input() {
+        return new TreeSet<>();
+    }
+
+    public static void main(String[] args) throws Exception {
+        new HardExtractor().extract(new File("c:/fabian/data/yago3"), "test");
+    }
 }

@@ -55,111 +55,108 @@ import utils.TitleExtractor;
 */
 public class StructureExtractor extends MultilingualWikipediaExtractor {
 
-  @Override
-  public Set<Theme> input() {
-    Set<Theme> input = new TreeSet<Theme>(Arrays.asList(
-        PatternHardExtractor.STRUCTUREPATTERNS, 
-        PatternHardExtractor.TITLEPATTERNS,
-        PatternHardExtractor.AIDACLEANINGPATTERNS, 
-        PatternHardExtractor.LANGUAGECODEMAPPING));
-    if (!Extractor.includeConcepts) {
-      input.add(WordnetExtractor.PREFMEANINGS);
+    @Override
+    public Set<Theme> input() {
+        Set<Theme> input = new TreeSet<Theme>(Arrays.asList(PatternHardExtractor.STRUCTUREPATTERNS, PatternHardExtractor.TITLEPATTERNS,
+                PatternHardExtractor.AIDACLEANINGPATTERNS, PatternHardExtractor.LANGUAGECODEMAPPING));
+        if (!Extractor.includeConcepts) {
+            input.add(WordnetExtractor.PREFMEANINGS);
+        }
+        return input;
     }
-    return input;
-  }
 
-  @Override
-  public Set<Theme> inputCached() {
-    Set<Theme> input = new TreeSet<Theme>(Arrays.asList(
-        PatternHardExtractor.STRUCTUREPATTERNS, 
-        PatternHardExtractor.TITLEPATTERNS,
-        PatternHardExtractor.AIDACLEANINGPATTERNS, 
-        PatternHardExtractor.LANGUAGECODEMAPPING));
-    if (!Extractor.includeConcepts) {
-      input.add(WordnetExtractor.PREFMEANINGS);
+    @Override
+    public Set<Theme> inputCached() {
+        Set<Theme> input = new TreeSet<Theme>(Arrays.asList(PatternHardExtractor.STRUCTUREPATTERNS, PatternHardExtractor.TITLEPATTERNS,
+                PatternHardExtractor.AIDACLEANINGPATTERNS, PatternHardExtractor.LANGUAGECODEMAPPING));
+        if (!Extractor.includeConcepts) {
+            input.add(WordnetExtractor.PREFMEANINGS);
+        }
+        return input;
     }
-    return input;
-  }
 
-  @Override
-  public Set<FollowUpExtractor> followUp() {
+    @Override
+    public Set<FollowUpExtractor> followUp() {
 
-    Set<FollowUpExtractor> result = new HashSet<FollowUpExtractor>();
+        Set<FollowUpExtractor> result = new HashSet<FollowUpExtractor>();
 
-    result.add(new Redirector(DIRTYSTRUCTUREFACTS.inLanguage(language), REDIRECTEDSTRUCTUREFACTS.inLanguage(language), this));
+        result.add(new Redirector(DIRTYSTRUCTUREFACTS.inLanguage(language), REDIRECTEDSTRUCTUREFACTS.inLanguage(language), this));
 
-    if (!isEnglish()) {
-      result.add(
-          new EntityTranslator(REDIRECTEDSTRUCTUREFACTS.inLanguage(language), TRANSLATEDREDIRECTEDSTRUCTUREFACTS.inLanguage(this.language), this));
-      result.add(new TypeChecker(TRANSLATEDREDIRECTEDSTRUCTUREFACTS.inLanguage(language), STRUCTUREFACTS.inLanguage(language), this));
-    } else {
-      result.add(new TypeChecker(REDIRECTEDSTRUCTUREFACTS.inLanguage(language), STRUCTUREFACTS.inLanguage(language), this));
+        if (!isEnglish()) {
+            result.add(new EntityTranslator(REDIRECTEDSTRUCTUREFACTS.inLanguage(language),
+                    TRANSLATEDREDIRECTEDSTRUCTUREFACTS.inLanguage(this.language), this));
+            result.add(new TypeChecker(TRANSLATEDREDIRECTEDSTRUCTUREFACTS.inLanguage(language), STRUCTUREFACTS.inLanguage(language), this));
+        }
+        else {
+            result.add(new TypeChecker(REDIRECTEDSTRUCTUREFACTS.inLanguage(language), STRUCTUREFACTS.inLanguage(language), this));
+        }
+        return result;
     }
-    return result;
-  }
 
-  /** Facts representing the Wikipedia structure (e.g. links) */
-  public static final MultilingualTheme DIRTYSTRUCTUREFACTS = new MultilingualTheme("structureFactsNeedTranslationTypeCheckingRedirecting",
-      "Regular structure from Wikipedia, e.g. links - needs redirecting, translation and typechecking");
+    /** Facts representing the Wikipedia structure (e.g. links) */
+    public static final MultilingualTheme DIRTYSTRUCTUREFACTS = new MultilingualTheme("structureFactsNeedTranslationTypeCheckingRedirecting",
+            "Regular structure from Wikipedia, e.g. links - needs redirecting, translation and typechecking");
 
-  /** Facts representing the Wikipedia structure (e.g. links) */
-  public static final MultilingualTheme REDIRECTEDSTRUCTUREFACTS = new MultilingualTheme("structureFactsNeedTranslationTypeChecking",
-      "Regular structure from Wikipedia, e.g. links - needs translation and typechecking");
+    /** Facts representing the Wikipedia structure (e.g. links) */
+    public static final MultilingualTheme REDIRECTEDSTRUCTUREFACTS = new MultilingualTheme("structureFactsNeedTranslationTypeChecking",
+            "Regular structure from Wikipedia, e.g. links - needs translation and typechecking");
 
-  /** Facts representing the Wikipedia structure (e.g. links) */
-  public static final MultilingualTheme TRANSLATEDREDIRECTEDSTRUCTUREFACTS = new MultilingualTheme("structureFactsNeedTypeChecking",
-      "Regular structure from Wikipedia, e.g. links - needs typechecking");
+    /** Facts representing the Wikipedia structure (e.g. links) */
+    public static final MultilingualTheme TRANSLATEDREDIRECTEDSTRUCTUREFACTS = new MultilingualTheme("structureFactsNeedTypeChecking",
+            "Regular structure from Wikipedia, e.g. links - needs typechecking");
 
-  /** Facts representing the Wikipedia structure (e.g. links) */
-  public static final MultilingualTheme STRUCTUREFACTS = new MultilingualTheme("structureFacts", "Regular structure from Wikipedia, e.g. links");
+    /** Facts representing the Wikipedia structure (e.g. links) */
+    public static final MultilingualTheme STRUCTUREFACTS = new MultilingualTheme("structureFacts", "Regular structure from Wikipedia, e.g. links");
 
-  @Override
-  public Set<Theme> output() {
-    return new FinalSet<Theme>(DIRTYSTRUCTUREFACTS.inLanguage(language));
-  }
-
-  @Override
-  public void extract() throws Exception {
-    // Extract the information
-    Announce.doing("Extracting structure facts");
-
-    BufferedReader in = FileUtils.getBufferedUTF8Reader(wikipedia);
-    TitleExtractor titleExtractor = new TitleExtractor(language);
-
-    FactCollection structurePatternCollection = PatternHardExtractor.STRUCTUREPATTERNS.factCollection();
-    FactTemplateExtractor structurePatterns = new FactTemplateExtractor(structurePatternCollection, "<_extendedStructureWikiPattern>");
-    PatternList replacements = new PatternList(PatternHardExtractor.AIDACLEANINGPATTERNS, "<_aidaCleaning>");
-
-    String titleEntity = null;
-    while (true) {
-      switch (FileLines.findIgnoreCase(in, "<title>")) {
-        case -1:
-          Announce.done();
-          in.close();
-          return;
-        case 0:
-          titleEntity = titleExtractor.getTitleEntity(in);
-          if (titleEntity == null) continue;
-
-          String page = FileLines.readBetween(in, "<text", "</text>");
-          String normalizedPage = Char17.decodeAmpersand(page.replaceAll("[\\s\\x00-\\x1F]+", " "));
-          String transformedPage = replacements.transform(normalizedPage);
-
-          for (Fact fact : structurePatterns.extract(transformedPage, titleEntity, language)) {
-            if (fact != null) DIRTYSTRUCTUREFACTS.inLanguage(language).write(fact);
-          }
-      }
+    @Override
+    public Set<Theme> output() {
+        return new FinalSet<Theme>(DIRTYSTRUCTUREFACTS.inLanguage(language));
     }
-  }
 
-  /**
-   * Needs Wikipedia as input
-   *
-   * @param wikipedia
-   *            Wikipedia XML dump
-   */
-  public StructureExtractor(String lang, File wikipedia) {
-    super(lang, wikipedia);
-  }
+    @Override
+    public void extract() throws Exception {
+        // Extract the information
+        Announce.doing("Extracting structure facts");
+
+        BufferedReader in = FileUtils.getBufferedUTF8Reader(wikipedia);
+        TitleExtractor titleExtractor = new TitleExtractor(language);
+
+        FactCollection structurePatternCollection = PatternHardExtractor.STRUCTUREPATTERNS.factCollection();
+        FactTemplateExtractor structurePatterns = new FactTemplateExtractor(structurePatternCollection, "<_extendedStructureWikiPattern>");
+        PatternList replacements = new PatternList(PatternHardExtractor.AIDACLEANINGPATTERNS, "<_aidaCleaning>");
+
+        String titleEntity = null;
+        while (true) {
+            switch (FileLines.findIgnoreCase(in, "<title>")) {
+                case -1:
+                    Announce.done();
+                    in.close();
+                    return;
+                case 0:
+                    titleEntity = titleExtractor.getTitleEntity(in);
+                    if (titleEntity == null)
+                        continue;
+
+                    String page = FileLines.readBetween(in, "<text", "</text>");
+                    String normalizedPage = Char17.decodeAmpersand(page.replaceAll("[\\s\\x00-\\x1F]+", " "));
+                    String transformedPage = replacements.transform(normalizedPage);
+
+                    for (Fact fact : structurePatterns.extract(transformedPage, titleEntity, language)) {
+                        if (fact != null)
+                            DIRTYSTRUCTUREFACTS.inLanguage(language).write(fact);
+                    }
+            }
+        }
+    }
+
+    /**
+     * Needs Wikipedia as input
+     *
+     * @param wikipedia
+     *            Wikipedia XML dump
+     */
+    public StructureExtractor(String lang, File wikipedia) {
+        super(lang, wikipedia);
+    }
 
 }

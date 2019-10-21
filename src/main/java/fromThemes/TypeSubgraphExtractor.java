@@ -13,39 +13,41 @@ import java.util.Set;
  */
 public class TypeSubgraphExtractor extends Extractor {
 
-  /** All types of YAGO */
-  public static final Theme YAGOTYPES = new Theme("yagoTypes", "The coherent types extracted from different wikipedias, potentially filtered by subgraph.", Theme.ThemeGroup.TAXONOMY);
+    /** All types of YAGO */
+    public static final Theme YAGOTYPES = new Theme("yagoTypes",
+            "The coherent types extracted from different wikipedias, potentially filtered by subgraph.", Theme.ThemeGroup.TAXONOMY);
 
-  public static final Theme YAGOTYPESSOURCES = new Theme("yagoTypesSources", "Sources for the coherent types extracted from different wikipedias, potentially filtered by subgraph.");
+    public static final Theme YAGOTYPESSOURCES = new Theme("yagoTypesSources",
+            "Sources for the coherent types extracted from different wikipedias, potentially filtered by subgraph.");
 
-  @Override
-  public Set<Theme> input() {
-    return new FinalSet<>(CoherentTypeExtractor.TYPES, CoherentTypeExtractor.TYPESSOURCES, TransitiveTypeExtractor.TRANSITIVETYPE);
-  }
-
-  @Override
-  public Set<Theme> output() {
-    return new FinalSet<>(YAGOTYPES, YAGOTYPESSOURCES);
-  }
-
-  @Override
-  public void extract() throws Exception {
-    Set<String> entitySubgraph = TransitiveTypeExtractor.getSubgraphEntities();
-
-    Announce.doing("Extracting supgraph from types from ", CoherentTypeExtractor.TYPES);
-    for (Fact f : CoherentTypeExtractor.TYPES) {
-      if (TransitiveTypeSubgraphExtractor.checkInSubgraph(f, entitySubgraph)) {
-        YAGOTYPES.write(f);
-      }
+    @Override
+    public Set<Theme> input() {
+        return new FinalSet<>(CoherentTypeExtractor.TYPES, CoherentTypeExtractor.TYPESSOURCES, TransitiveTypeExtractor.TRANSITIVETYPE);
     }
-    Announce.done();
 
-    Announce.doing("Extracting supgraph from types from ", CoherentTypeExtractor.TYPESSOURCES);
-    for (Fact f : CoherentTypeExtractor.TYPESSOURCES) {
-      if (TransitiveTypeSubgraphExtractor.checkInSubgraph(f, entitySubgraph)) {
-        YAGOTYPESSOURCES.write(f);
-      }
+    @Override
+    public Set<Theme> output() {
+        return new FinalSet<>(YAGOTYPES, YAGOTYPESSOURCES);
     }
-    Announce.done();
-  }
+
+    @Override
+    public void extract() throws Exception {
+        Set<String> entitySubgraph = TransitiveTypeExtractor.getSubgraphEntities();
+
+        Announce.doing("Extracting supgraph from types from ", CoherentTypeExtractor.TYPES);
+        for (Fact f : CoherentTypeExtractor.TYPES) {
+            if (TransitiveTypeSubgraphExtractor.checkInSubgraph(f, entitySubgraph)) {
+                YAGOTYPES.write(f);
+            }
+        }
+        Announce.done();
+
+        Announce.doing("Extracting supgraph from types from ", CoherentTypeExtractor.TYPESSOURCES);
+        for (Fact f : CoherentTypeExtractor.TYPESSOURCES) {
+            if (TransitiveTypeSubgraphExtractor.checkInSubgraph(f, entitySubgraph)) {
+                YAGOTYPESSOURCES.write(f);
+            }
+        }
+        Announce.done();
+    }
 }

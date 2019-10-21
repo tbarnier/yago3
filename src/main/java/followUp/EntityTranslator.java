@@ -46,121 +46,125 @@ import utils.Theme;
 
 public class EntityTranslator extends FollowUpExtractor {
 
-  /** Target language */
-  protected String language;
+    /** Target language */
+    protected String language;
 
-  /** Object dictionary */
-  protected Theme objectDictionaryTheme;
-  
-  /** Subject dictionary */
-  protected Theme subjectDictionaryTheme;
+    /** Object dictionary */
+    protected Theme objectDictionaryTheme;
 
-  /** Keep facts even if they cannot be translated */
-  protected boolean gracefulTranslation;
+    /** Subject dictionary */
+    protected Theme subjectDictionaryTheme;
 
-  @Override
-  public Set<Theme> input() {
-    // Do not use a FinalSet here because
-    // objectDictionary might be equivalent to
-    // entityDictionary
-    return (new HashSet<>(Arrays.asList(checkMe, subjectDictionaryTheme, objectDictionaryTheme)));
-  }
+    /** Keep facts even if they cannot be translated */
+    protected boolean gracefulTranslation;
 
-  @Override
-  public Set<Theme> inputCached() {
-    // Do not use a FinalSet here because
-    // objectDictionary might be equivalent to
-    // entiyDictionary
-    return (new HashSet<>(Arrays.asList(subjectDictionaryTheme, objectDictionaryTheme)));
-  }
-
-  @Override
-  public Set<Theme> output() {
-    return new FinalSet<Theme>(checked);
-  }
-
-  /**
-   * Translates the object as an entity, or returns it simply if it's a
-   * literal. To be overwritten in subclasses.
-   */
-  protected String translateObject(String object, Map<String, String> dictionary) {
-    if (FactComponent.isLiteral(object)) return (object);
-    return (dictionary.get(object));
-  }
-
-  @Override
-  public void extract() throws Exception {
-    Map<String, String> subjectDictionary = subjectDictionaryTheme.dictionary();
-    Map<String, String> objectDictionary = objectDictionaryTheme.dictionary();
-
-    boolean baseFactWasTranslated = false;
-
-    for (Fact f : checkMe) {
-      // Translate metafacts if the preceding basefact was translated as well.
-      if (FactComponent.isFactId(f.getSubject()) && baseFactWasTranslated) {
-        String translatedObject = translateObject(f.getObject(), objectDictionary);
-        if (translatedObject != null) {
-          checked.write(new Fact(f.getId(), f.getSubject(), f.getRelation(), translatedObject));
-        }
-      } else {
-        baseFactWasTranslated = false;
-        String translatedSubject = subjectDictionary.get(f.getSubject());
-        if (translatedSubject == null) {
-          if (gracefulTranslation) {
-            translatedSubject = f.getSubject();
-          } else {
-            continue;
-          }
-        }
-        String translatedObject = translateObject(f.getObject(), objectDictionary);
-        if (translatedObject == null) {
-          // Do not drop objects if they are a url (which look like entities but cannot be translated).
-          if (gracefulTranslation || isUrl(f.getObject())) {
-            translatedObject = f.getObject();
-          } else {
-            continue;
-          }
-        }
-        checked.write(new Fact(f.getId(), translatedSubject, f.getRelation(), translatedObject));
-        baseFactWasTranslated = true;
-      }
-    }
-  }
-
-  private boolean isUrl(String translatedObject) {
-    return translatedObject.startsWith("<http://") || translatedObject.startsWith("<https://");
-  }
-
-  public EntityTranslator(Theme in, Theme out, Extractor parent, boolean graceful) {
-    super(in, out, parent);
-    this.language = in.language();
-    if (language == null || FactComponent.isEnglish(language))
-      throw new RuntimeException("Don't translate English. This is useless and very costly.");
-    // By default, we translate entities.
-    // May be overwritten in subclasses
-    objectDictionaryTheme = DictionaryExtractor.ENTITY_DICTIONARY.inLanguage(language);
-    
-    subjectDictionaryTheme = DictionaryExtractor.ENTITY_DICTIONARY.inLanguage(language);
-
-    this.gracefulTranslation = graceful;
-  }
-
-  public EntityTranslator(Theme in, Theme out, Extractor parent) {
-    this(in, out, parent, false);
-  }
-
-  public static void main(String... args) throws Exception {
-    String language = "ro";
-
-    Theme in = WikiInfoExtractor.WIKIINFONEEDSTYPECHECKANDTRANSLATION.inLanguage("ro");
-    in.assignToFolder(new File(args[0]));
-    FactCollection fc = in.factCollection();
-    for (Fact f : fc) {
-      System.out.println("fact: " + f);
+    @Override
+    public Set<Theme> input() {
+        // Do not use a FinalSet here because
+        // objectDictionary might be equivalent to
+        // entityDictionary
+        return (new HashSet<>(Arrays.asList(checkMe, subjectDictionaryTheme, objectDictionaryTheme)));
     }
 
-    new EntityTranslator(WikiInfoExtractor.WIKIINFONEEDSTYPECHECKANDTRANSLATION.inLanguage(language), WikiInfoExtractor.WIKIINFONEEDSTYPECHECK.inLanguage(language), null, true)
-        .extract(new File(args[0]), "none");
-  }
+    @Override
+    public Set<Theme> inputCached() {
+        // Do not use a FinalSet here because
+        // objectDictionary might be equivalent to
+        // entiyDictionary
+        return (new HashSet<>(Arrays.asList(subjectDictionaryTheme, objectDictionaryTheme)));
+    }
+
+    @Override
+    public Set<Theme> output() {
+        return new FinalSet<Theme>(checked);
+    }
+
+    /**
+     * Translates the object as an entity, or returns it simply if it's a
+     * literal. To be overwritten in subclasses.
+     */
+    protected String translateObject(String object, Map<String, String> dictionary) {
+        if (FactComponent.isLiteral(object))
+            return (object);
+        return (dictionary.get(object));
+    }
+
+    @Override
+    public void extract() throws Exception {
+        Map<String, String> subjectDictionary = subjectDictionaryTheme.dictionary();
+        Map<String, String> objectDictionary = objectDictionaryTheme.dictionary();
+
+        boolean baseFactWasTranslated = false;
+
+        for (Fact f : checkMe) {
+            // Translate metafacts if the preceding basefact was translated as well.
+            if (FactComponent.isFactId(f.getSubject()) && baseFactWasTranslated) {
+                String translatedObject = translateObject(f.getObject(), objectDictionary);
+                if (translatedObject != null) {
+                    checked.write(new Fact(f.getId(), f.getSubject(), f.getRelation(), translatedObject));
+                }
+            }
+            else {
+                baseFactWasTranslated = false;
+                String translatedSubject = subjectDictionary.get(f.getSubject());
+                if (translatedSubject == null) {
+                    if (gracefulTranslation) {
+                        translatedSubject = f.getSubject();
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                String translatedObject = translateObject(f.getObject(), objectDictionary);
+                if (translatedObject == null) {
+                    // Do not drop objects if they are a url (which look like entities but cannot be translated).
+                    if (gracefulTranslation || isUrl(f.getObject())) {
+                        translatedObject = f.getObject();
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                checked.write(new Fact(f.getId(), translatedSubject, f.getRelation(), translatedObject));
+                baseFactWasTranslated = true;
+            }
+        }
+    }
+
+    private boolean isUrl(String translatedObject) {
+        return translatedObject.startsWith("<http://") || translatedObject.startsWith("<https://");
+    }
+
+    public EntityTranslator(Theme in, Theme out, Extractor parent, boolean graceful) {
+        super(in, out, parent);
+        this.language = in.language();
+        if (language == null || FactComponent.isEnglish(language))
+            throw new RuntimeException("Don't translate English. This is useless and very costly.");
+        // By default, we translate entities.
+        // May be overwritten in subclasses
+        objectDictionaryTheme = DictionaryExtractor.ENTITY_DICTIONARY.inLanguage(language);
+
+        subjectDictionaryTheme = DictionaryExtractor.ENTITY_DICTIONARY.inLanguage(language);
+
+        this.gracefulTranslation = graceful;
+    }
+
+    public EntityTranslator(Theme in, Theme out, Extractor parent) {
+        this(in, out, parent, false);
+    }
+
+    public static void main(String... args) throws Exception {
+        String language = "ro";
+
+        Theme in = WikiInfoExtractor.WIKIINFONEEDSTYPECHECKANDTRANSLATION.inLanguage("ro");
+        in.assignToFolder(new File(args[0]));
+        FactCollection fc = in.factCollection();
+        for (Fact f : fc) {
+            System.out.println("fact: " + f);
+        }
+
+        new EntityTranslator(WikiInfoExtractor.WIKIINFONEEDSTYPECHECKANDTRANSLATION.inLanguage(language),
+                WikiInfoExtractor.WIKIINFONEEDSTYPECHECK.inLanguage(language), null, true).extract(new File(args[0]), "none");
+    }
 
 }

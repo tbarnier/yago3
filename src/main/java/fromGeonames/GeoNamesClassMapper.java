@@ -57,240 +57,238 @@ import utils.Theme.ThemeGroup;
 */
 public class GeoNamesClassMapper extends DataExtractor {
 
-  /** YAGO geo class */
-  public static final String GEO_CLASS = "<yagoGeoEntity>";
+    /** YAGO geo class */
+    public static final String GEO_CLASS = "<yagoGeoEntity>";
 
-  private Set<String> geographicalWordNetClasses;
+    private Set<String> geographicalWordNetClasses;
 
-  private BreakIterator bi = BreakIterator.getWordInstance();
+    private BreakIterator bi = BreakIterator.getWordInstance();
 
-  private Pattern NON_WORD_CHAR = Pattern.compile("^[^\\w]*$");
+    private Pattern NON_WORD_CHAR = Pattern.compile("^[^\\w]*$");
 
-  /** geonames class links */
-  public static final Theme GEONAMESCLASSSIDS = new Theme("yagoGeonamesClassIds", "IDs from GeoNames classes", ThemeGroup.GEONAMES);
+    /** geonames class links */
+    public static final Theme GEONAMESCLASSSIDS = new Theme("yagoGeonamesClassIds", "IDs from GeoNames classes", ThemeGroup.GEONAMES);
 
-  /** geonames classes */
-  public static final Theme GEONAMESCLASSES = new Theme("yagoGeonamesClasses", "Classes from GeoNames", ThemeGroup.GEONAMES);
+    /** geonames classes */
+    public static final Theme GEONAMESCLASSES = new Theme("yagoGeonamesClasses", "Classes from GeoNames", ThemeGroup.GEONAMES);
 
-  /** geonames glosses */
-  public static final Theme GEONAMESGLOSSES = new Theme("yagoGeonamesGlosses", "Glosses from GeoNames", ThemeGroup.GEONAMES);
+    /** geonames glosses */
+    public static final Theme GEONAMESGLOSSES = new Theme("yagoGeonamesGlosses", "Glosses from GeoNames", ThemeGroup.GEONAMES);
 
-  /** geonames sources */
-  public static final Theme GEONAMESSOURCES = new Theme("geonamesSources", "Source information for the facts extracted from GeoNames");
+    /** geonames sources */
+    public static final Theme GEONAMESSOURCES = new Theme("geonamesSources", "Source information for the facts extracted from GeoNames");
 
-  @Override
-  public Set<Theme> input() {
-    return new HashSet<Theme>(Arrays.asList(WordnetExtractor.WORDNETGLOSSES, WordnetExtractor.WORDNETWORDS, WordnetExtractor.WORDNETCLASSES,
-        PatternHardExtractor.HARDWIREDFACTS));
-  }
-
-  @Override
-  public Set<Theme> output() {
-    return new FinalSet<Theme>(GEONAMESCLASSES, GEONAMESGLOSSES, GEONAMESCLASSSIDS, GEONAMESSOURCES);
-  }
-
-  @Override
-  public Set<Theme> inputCached() {
-    return new FinalSet<>(PatternHardExtractor.HARDWIREDFACTS, WordnetExtractor.WORDNETCLASSES, WordnetExtractor.WORDNETWORDS,
-        WordnetExtractor.WORDNETGLOSSES);
-  }
-
-  @Override
-  public void extract() throws Exception {
-    geographicalWordNetClasses = new HashSet<String>();
-    FactCollection hardFacts = PatternHardExtractor.HARDWIREDFACTS.factCollection();
-    for (Fact f : hardFacts.seekFactsWithRelationAndObject(RDFS.subclassOf, GEO_CLASS)) {
-      geographicalWordNetClasses.add(f.getArg(1));
+    @Override
+    public Set<Theme> input() {
+        return new HashSet<>(Arrays.asList(WordnetExtractor.WORDNETGLOSSES, WordnetExtractor.WORDNETWORDS, WordnetExtractor.WORDNETCLASSES,
+                PatternHardExtractor.HARDWIREDFACTS));
     }
 
-    FactCollection wordnetWords = WordnetExtractor.WORDNETWORDS.factCollection();
-    FactCollection wordnetGlosses = WordnetExtractor.WORDNETGLOSSES.factCollection();
-    FactCollection wordnetClasses = WordnetExtractor.WORDNETCLASSES.factCollection();
-
-    for (String line : new FileLines(inputData, "Loading feature code mappings")) {
-      String[] data = line.split("\t");
-
-      String featureId = data[0];
-      String featureClass = data[1].replaceAll("\\(.*\\)", "").trim().toLowerCase();
-
-      String featureGloss = null;
-      if (data.length > 2) {
-        featureGloss = data[2];
-      }
-
-      String geoClass = FactComponent.forGeoNamesClass(featureClass);
-      String wordNetClass = mapGeonamesCategory(featureClass, featureGloss, wordnetWords, wordnetGlosses, wordnetClasses);
-      String parentClass = (wordNetClass != null) ? wordNetClass : GEO_CLASS;
-
-      write(GEONAMESCLASSES, new Fact(null, geoClass, RDFS.subclassOf, parentClass), GEONAMESSOURCES, "<http://www.geonames.org/>",
-          "GeoNamesClassMapper");
-      GEONAMESCLASSSIDS.write(new Fact(null, geoClass, "<hasGeonamesClassId>", FactComponent.forString(featureId)));
-
-      if (featureGloss != null) {
-        // there is a gloss
-        Fact gloss = new Fact(null, geoClass, "<hasGloss>", FactComponent.forString(data[2]));
-        GEONAMESGLOSSES.write(gloss);
-      }
-    }
-  }
-
-  private String mapGeonamesCategory(String cat, String gloss, FactCollection wordnetWords, FactCollection wordnetGlosses,
-      FactCollection wordnetClasses) throws IOException {
-    NounGroup category = new NounGroup(cat.toLowerCase());
-    String stemmedHead = PlingStemmer.stem(category.head());
-
-    List<String> wordnetMeanings = null;
-    String lookup = FactComponent.forStringWithLanguage(category.preModifier() + ' ' + stemmedHead, "eng");
-
-    // Try premodifier + head, if no results, only head
-
-    if (category.preModifier() != null) {
-      wordnetMeanings = getAllMeanings(lookup, wordnetWords);
+    @Override
+    public Set<Theme> output() {
+        return new FinalSet<>(GEONAMESCLASSES, GEONAMESGLOSSES, GEONAMESCLASSSIDS, GEONAMESSOURCES);
     }
 
-    if (wordnetMeanings == null || wordnetMeanings.size() == 0) {
-      lookup = FactComponent.forStringWithLanguage(stemmedHead, "eng");
-
-      wordnetMeanings = getAllMeanings(lookup, wordnetWords);
+    @Override
+    public Set<Theme> inputCached() {
+        return new FinalSet<>(PatternHardExtractor.HARDWIREDFACTS, WordnetExtractor.WORDNETCLASSES, WordnetExtractor.WORDNETWORDS,
+                WordnetExtractor.WORDNETGLOSSES);
     }
 
-    String preferredMeaning = null;
-    List<Fact> preferredLabels = wordnetWords.seekFactsWithRelationAndObject("skos:prefLabel", lookup);
-    if (preferredLabels.size() > 0) {
-      preferredMeaning = preferredLabels.get(0).getArg(1);
-    }
-    String wordnet = getBestMeaning(cat, gloss, preferredMeaning, wordnetMeanings, wordnetGlosses, wordnetClasses);
-    if (wordnet != null && wordnet.startsWith("<wordnet_")) return (wordnet);
-    Announce.debug("Could not find type in", category, "(no wordnet match)");
-    return (null);
-  }
-
-  private String getBestMeaning(String word, String gloss, String preferredMeaning, List<String> meanings, FactCollection wnGlosses,
-      FactCollection wnClasses) {
-    if (meanings.size() == 0) {
-      return null;
-    }
-
-    // 1. check if only one of the possible meanings has a geographical
-    // sense
-    Set<String> geoMeanings = new HashSet<String>();
-
-    for (String meaning : meanings) {
-      Set<String> ancs = wnClasses.superClasses(meaning);
-
-      ancs.retainAll(geographicalWordNetClasses);
-
-      if (ancs.size() > 0) {
-        geoMeanings.add(meaning);
-      }
-    }
-
-    if (geoMeanings.size() == 1) {
-      return geoMeanings.iterator().next();
-    } else if (geoMeanings.size() > 1) {
-      // remove all non-geo-meanings - this improves precision in the
-      // later
-      // token-based mapping
-      meanings.retainAll(geoMeanings);
-    }
-
-    // 2. if 0 or >1 meanings are geoMeanings, fall back to gloss token
-    // overlap
-    if (gloss != null) {
-      Set<String> glossTokens = getTokensForGloss(gloss);
-
-      double maxOverlap = 0.0;
-      String bestMatch = null;
-
-      for (String meaning : meanings) {
-        String wnGloss = FactComponent.asJavaString(wnGlosses.getObject(meaning, "<hasGloss>"));
-        Set<String> wnGlossTokens = getTokensForGloss(wnGloss);
-
-        // for (String synonym : Basics.facts.getArg1s("means",
-        // meaning)) {
-        // wnGlossTokens.add(PlingStemmer.stem(Normalize.unString(synonym)));
-        // }
-
-        double overlap = calcJaccardSimilarity(glossTokens, wnGlossTokens);
-
-        if (overlap > maxOverlap) {
-          bestMatch = meaning;
-          maxOverlap = overlap;
+    @Override
+    public void extract() throws Exception {
+        geographicalWordNetClasses = new HashSet<String>();
+        FactCollection hardFacts = PatternHardExtractor.HARDWIREDFACTS.factCollection();
+        for (Fact f : hardFacts.seekFactsWithRelationAndObject(RDFS.subclassOf, GEO_CLASS)) {
+            geographicalWordNetClasses.add(f.getArg(1));
         }
-      }
 
-      if (bestMatch != null) {
-        return bestMatch;
-      }
+        FactCollection wordnetWords = WordnetExtractor.WORDNETWORDS.factCollection();
+        FactCollection wordnetGlosses = WordnetExtractor.WORDNETGLOSSES.factCollection();
+        FactCollection wordnetClasses = WordnetExtractor.WORDNETCLASSES.factCollection();
+
+        for (String line : new FileLines(inputData, "Loading feature code mappings")) {
+            String[] data = line.split("\t");
+
+            String featureId = data[0];
+            String featureClass = data[1].replaceAll("\\(.*\\)", "").trim().toLowerCase();
+
+            String featureGloss = null;
+            if (data.length > 2) {
+                featureGloss = data[2];
+            }
+
+            String geoClass = FactComponent.forGeoNamesClass(featureClass);
+            String wordNetClass = mapGeonamesCategory(featureClass, featureGloss, wordnetWords, wordnetGlosses, wordnetClasses);
+            String parentClass = (wordNetClass != null) ? wordNetClass : GEO_CLASS;
+
+            write(GEONAMESCLASSES, new Fact(null, geoClass, RDFS.subclassOf, parentClass), GEONAMESSOURCES, "<http://www.geonames.org/>",
+                    "GeoNamesClassMapper");
+            GEONAMESCLASSSIDS.write(new Fact(null, geoClass, "<hasGeonamesClassId>", FactComponent.forString(featureId)));
+
+            if (featureGloss != null) {
+                // there is a gloss
+                Fact gloss = new Fact(null, geoClass, "<hasGloss>", FactComponent.forString(data[2]));
+                GEONAMESGLOSSES.write(gloss);
+            }
+        }
     }
 
-    // 3. fallback -> return preferred meaning if it has geo meaning
-    if (preferredMeaning != null) {
-      Set<String> preferredMeaningAncs = wnClasses.superClasses(preferredMeaning);
+    private String mapGeonamesCategory(String cat, String gloss, FactCollection wordnetWords, FactCollection wordnetGlosses,
+            FactCollection wordnetClasses) throws IOException {
+        NounGroup category = new NounGroup(cat.toLowerCase());
+        String stemmedHead = PlingStemmer.stem(category.head());
 
-      preferredMeaningAncs.retainAll(geographicalWordNetClasses);
+        List<String> wordnetMeanings = null;
+        String lookup = FactComponent.forStringWithLanguage(category.preModifier() + ' ' + stemmedHead, "eng");
 
-      if (preferredMeaningAncs.size() > 0) {
-        return preferredMeaning;
-      }
+        // Try premodifier + head, if no results, only head
+
+        if (category.preModifier() != null) {
+            wordnetMeanings = getAllMeanings(lookup, wordnetWords);
+        }
+
+        if (wordnetMeanings == null || wordnetMeanings.isEmpty()) {
+            lookup = FactComponent.forStringWithLanguage(stemmedHead, "eng");
+
+            wordnetMeanings = getAllMeanings(lookup, wordnetWords);
+        }
+
+        String preferredMeaning = null;
+        List<Fact> preferredLabels = wordnetWords.seekFactsWithRelationAndObject("skos:prefLabel", lookup);
+        if (!preferredLabels.isEmpty()) {
+            preferredMeaning = preferredLabels.get(0).getArg(1);
+        }
+        String wordnet = getBestMeaning(cat, gloss, preferredMeaning, wordnetMeanings, wordnetGlosses, wordnetClasses);
+        if (wordnet != null && wordnet.startsWith("<wordnet_"))
+            return (wordnet);
+        Announce.debug("Could not find type in", category, "(no wordnet match)");
+        return (null);
     }
 
-    // 4. last fallback - just return yagoGeoEntity as most general location
-    // class
-    return GEO_CLASS;
-  }
+    private String getBestMeaning(String word, String gloss, String preferredMeaning, List<String> meanings, FactCollection wnGlosses,
+            FactCollection wnClasses) {
+        if (meanings.isEmpty()) {
+            return null;
+        }
 
-  private Set<String> getTokensForGloss(String gloss) {
-    Set<String> tokens = new HashSet<String>();
+        // 1. check if only one of the possible meanings has a geographical
+        // sense
+        Set<String> geoMeanings = new HashSet<>();
 
-    bi.setText(gloss);
+        for (String meaning : meanings) {
+            Set<String> ancs = wnClasses.superClasses(meaning);
 
-    int start = bi.first();
-    for (int end = bi.next(); end != BreakIterator.DONE; start = end, end = bi.next()) {
-      String token = gloss.substring(start, end);
+            ancs.retainAll(geographicalWordNetClasses);
 
-      Matcher m = NON_WORD_CHAR.matcher(token);
+            if (!ancs.isEmpty()) {
+                geoMeanings.add(meaning);
+            }
+        }
 
-      if (!m.find() && !Stopwords.isStopword(token)) {
-        tokens.add(token);
-      }
+        if (geoMeanings.size() == 1) {
+            return geoMeanings.iterator().next();
+        }
+        else
+            if (geoMeanings.size() > 1) {
+                // remove all non-geo-meanings - this improves precision in the
+                // later
+                // token-based mapping
+                meanings.retainAll(geoMeanings);
+            }
+
+        // 2. if 0 or >1 meanings are geoMeanings, fall back to gloss token
+        // overlap
+        if (gloss != null) {
+            Set<String> glossTokens = getTokensForGloss(gloss);
+
+            double maxOverlap = 0.0;
+            String bestMatch = null;
+
+            for (String meaning : meanings) {
+                String wnGloss = FactComponent.asJavaString(wnGlosses.getObject(meaning, "<hasGloss>"));
+                Set<String> wnGlossTokens = getTokensForGloss(wnGloss);
+
+                double overlap = calcJaccardSimilarity(glossTokens, wnGlossTokens);
+
+                if (overlap > maxOverlap) {
+                    bestMatch = meaning;
+                    maxOverlap = overlap;
+                }
+            }
+
+            if (bestMatch != null) {
+                return bestMatch;
+            }
+        }
+
+        // 3. fallback -> return preferred meaning if it has geo meaning
+        if (preferredMeaning != null) {
+            Set<String> preferredMeaningAncs = wnClasses.superClasses(preferredMeaning);
+
+            preferredMeaningAncs.retainAll(geographicalWordNetClasses);
+
+            if (!preferredMeaningAncs.isEmpty()) {
+                return preferredMeaning;
+            }
+        }
+
+        // 4. last fallback - just return yagoGeoEntity as most general location
+        // class
+        return GEO_CLASS;
     }
 
-    return tokens;
-  }
+    private Set<String> getTokensForGloss(String gloss) {
+        Set<String> tokens = new HashSet<String>();
 
-  private double calcJaccardSimilarity(Set<String> glossTokens, Set<String> wnGlossTokens) {
-    Set<String> union = new HashSet<String>(glossTokens);
-    union.addAll(wnGlossTokens);
+        bi.setText(gloss);
 
-    Set<String> intersection = new HashSet<String>(glossTokens);
-    intersection.retainAll(wnGlossTokens);
+        int start = bi.first();
+        for (int end = bi.next(); end != BreakIterator.DONE; start = end, end = bi.next()) {
+            String token = gloss.substring(start, end);
 
-    double jaccardSim = (double) intersection.size() / (double) union.size();
+            Matcher m = NON_WORD_CHAR.matcher(token);
 
-    return jaccardSim;
-  }
+            if (!m.find() && !Stopwords.isStopword(token)) {
+                tokens.add(token);
+            }
+        }
 
-  private List<String> getAllMeanings(String lookup, FactCollection wordnetWords) {
-    List<String> meanings = new LinkedList<String>();
-
-    List<Fact> labels = wordnetWords.seekFactsWithRelationAndObject(RDFS.label, lookup);
-    for (Fact f : labels) {
-      meanings.add(f.getArg(1));
+        return tokens;
     }
 
-    return meanings;
-  }
+    private double calcJaccardSimilarity(Set<String> glossTokens, Set<String> wnGlossTokens) {
+        Set<String> union = new HashSet<>(glossTokens);
+        union.addAll(wnGlossTokens);
 
-  public GeoNamesClassMapper(File geonamesFeatureCodes) {
-    super(geonamesFeatureCodes);
-  }
+        Set<String> intersection = new HashSet<>(glossTokens);
+        intersection.retainAll(wnGlossTokens);
 
-  public GeoNamesClassMapper() {
-    this(new File(Parameters.get("geonames") + "/" + "featureCodes_en.txt"));
-  }
+        double jaccardSim = (double) intersection.size() / (double) union.size();
 
-  public static void main(String[] args) throws Exception {
-    new GeoNamesClassMapper().extract(new File("c:/fabian/data/yago3"), "");
-  }
+        return jaccardSim;
+    }
+
+    private List<String> getAllMeanings(String lookup, FactCollection wordnetWords) {
+        List<String> meanings = new LinkedList<>();
+
+        List<Fact> labels = wordnetWords.seekFactsWithRelationAndObject(RDFS.label, lookup);
+        for (Fact f : labels) {
+            meanings.add(f.getArg(1));
+        }
+
+        return meanings;
+    }
+
+    public GeoNamesClassMapper(File geonamesFeatureCodes) throws IOException {
+        super(geonamesFeatureCodes);
+    }
+
+    public GeoNamesClassMapper() throws IOException {
+        this(new File(Parameters.get("geonames") + "/" + "featureCodes_en.txt"));
+    }
+
+    public static void main(String[] args) throws Exception {
+        new GeoNamesClassMapper().extract(new File("c:/fabian/data/yago3"), "");
+    }
 }

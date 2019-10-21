@@ -47,100 +47,117 @@ import utils.TitleExtractor;
 */
 public class WikiInfoExtractor extends MultilingualWikipediaExtractor {
 
-  @Override
-  public Set<Theme> input() {
-    return new FinalSet<>(PatternHardExtractor.TITLEPATTERNS);
-  }
-
-  @Override
-  public Set<Theme> inputCached() {
-    return new FinalSet<>(PatternHardExtractor.TITLEPATTERNS);
-  }
-
-  public static final MultilingualTheme WIKIINFONEEDSTYPECHECKANDTRANSLATIONANDREDIRECTION = new MultilingualTheme("wikipediaInfoNeedsTypeCheckAndTranslationAndRedirection",
-      "Stores the sizes, outlinks, and URLs of the Wikipedia articles of the YAGO entities.");
-  
-  public static final MultilingualTheme WIKIINFONEEDSTYPECHECKANDTRANSLATION = new MultilingualTheme("wikipediaInfoNeedsTypeCheckAndTranslation",
-      "Stores the sizes, outlinks, and URLs of the Wikipedia articles of the YAGO entities.");
-  
-  public static final MultilingualTheme WIKIINFONEEDSTYPECHECKANDREDIRECTION = new MultilingualTheme("wikipediaInfoNeedsTypeCheckAndRedirection",
-      "Stores the sizes, outlinks, and URLs of the Wikipedia articles of the YAGO entities.");
-
-  public static final MultilingualTheme WIKIINFONEEDSTYPECHECK = new MultilingualTheme("wikipediaInfoNeedsTypeCheck",
-      "Stores the sizes, outlinks, and URLs of the Wikipedia articles of the YAGO entities.");
-
-  public static final MultilingualTheme WIKIINFO = new MultilingualTheme("yagoWikipediaInfo",
-      "Stores the sizes, outlinks, and URLs of the Wikipedia articles of the YAGO entities", Theme.ThemeGroup.WIKIPEDIA);
-
-  @Override
-  public Set<Theme> output() {
-    if (isEnglish()) {
-      return new FinalSet<>(WIKIINFONEEDSTYPECHECKANDREDIRECTION.inLanguage(language));
-    } else {
-      return new FinalSet<>(WIKIINFONEEDSTYPECHECKANDTRANSLATIONANDREDIRECTION.inLanguage(language));
+    @Override
+    public Set<Theme> input() {
+        return new FinalSet<>(PatternHardExtractor.TITLEPATTERNS);
     }
-  }
 
-  @Override
-  public Set<FollowUpExtractor> followUp() {
-    HashSet<FollowUpExtractor> s = new HashSet<>();
-    if (isEnglish()) {
-      s.add(new Redirector(WIKIINFONEEDSTYPECHECKANDREDIRECTION.inLanguage(language), WIKIINFONEEDSTYPECHECK.inLanguage(language), this));
-    } else {
-      s.add(new Redirector(WIKIINFONEEDSTYPECHECKANDTRANSLATIONANDREDIRECTION.inLanguage(language), WIKIINFONEEDSTYPECHECKANDTRANSLATION.inLanguage(language), this));
-      s.add(new EntityTranslator(WIKIINFONEEDSTYPECHECKANDTRANSLATION.inLanguage(language), WIKIINFONEEDSTYPECHECK.inLanguage(language), this, true));
+    @Override
+    public Set<Theme> inputCached() {
+        return new FinalSet<>(PatternHardExtractor.TITLEPATTERNS);
     }
-    s.add(new TypeChecker(WIKIINFONEEDSTYPECHECK.inLanguage(language), WIKIINFO.inLanguage(language), this));
-    return s;
-  }
 
-  @Override
-  public void extract() throws Exception {
-    TitleExtractor titleExtractor = TitleExtractor.rawExtractor(language);
-    Reader in = FileUtils.getBufferedUTF8Reader(wikipedia);
-    while (FileLines.scrollTo(in, "<title>")) {
-      String entity = titleExtractor.getTitleEntityRaw(in);
-      if (entity == null) continue;
-      if (!FileLines.scrollTo(in, "<text")) continue;
-      if (!FileLines.scrollTo(in, ">")) continue;
-      String page = FileLines.readToBoundary(in, "</text>");
-      if (page == null) continue;
-      if (isEnglish()) {
-        WIKIINFONEEDSTYPECHECKANDREDIRECTION.inLanguage(language).write(new Fact(entity, "<hasWikipediaArticleLength>", FactComponent.forNumber(page.length())));
-        WIKIINFONEEDSTYPECHECKANDREDIRECTION.inLanguage(language).write(new Fact(entity, "<hasWikipediaUrl>", FactComponent.wikipediaURL(entity, language)));
-      } else {
-        // This number is per Wikipedia language edition
-        WIKIINFONEEDSTYPECHECKANDTRANSLATIONANDREDIRECTION.inLanguage(language).write(new Fact(entity, "<hasWikipediaArticleLength>", FactComponent.forNumber(page.length())));
-        WIKIINFONEEDSTYPECHECKANDTRANSLATIONANDREDIRECTION.inLanguage(language).write(new Fact(entity, "<hasWikipediaUrl>", FactComponent.wikipediaURL(entity, language)));
-      }
-      Set<String> targets = new HashSet<>();
-      for (int pos = page.indexOf("[["); pos != -1; pos = page.indexOf("[[", pos + 2)) {
-        int endPos = page.indexOf(']', pos);
-        if (endPos == -1) continue;
-        String target = page.substring(pos + 2, endPos);
-        endPos = target.indexOf('|');
-        if (endPos != -1) target = target.substring(0, endPos);
-        target = FactComponent.forForeignWikipediaTitle(target, language);
-        targets.add(target);
-      }
+    public static final MultilingualTheme WIKIINFONEEDSTYPECHECKANDTRANSLATIONANDREDIRECTION = new MultilingualTheme(
+            "wikipediaInfoNeedsTypeCheckAndTranslationAndRedirection",
+            "Stores the sizes, outlinks, and URLs of the Wikipedia articles of the YAGO entities.");
 
-      MultilingualTheme out = isEnglish() ? WIKIINFONEEDSTYPECHECKANDREDIRECTION : WIKIINFONEEDSTYPECHECKANDTRANSLATIONANDREDIRECTION;
+    public static final MultilingualTheme WIKIINFONEEDSTYPECHECKANDTRANSLATION = new MultilingualTheme("wikipediaInfoNeedsTypeCheckAndTranslation",
+            "Stores the sizes, outlinks, and URLs of the Wikipedia articles of the YAGO entities.");
 
-      for (String target : targets) {
-        out.inLanguage(language).write(new Fact(entity, "<linksTo>", target));
-      }
+    public static final MultilingualTheme WIKIINFONEEDSTYPECHECKANDREDIRECTION = new MultilingualTheme("wikipediaInfoNeedsTypeCheckAndRedirection",
+            "Stores the sizes, outlinks, and URLs of the Wikipedia articles of the YAGO entities.");
+
+    public static final MultilingualTheme WIKIINFONEEDSTYPECHECK = new MultilingualTheme("wikipediaInfoNeedsTypeCheck",
+            "Stores the sizes, outlinks, and URLs of the Wikipedia articles of the YAGO entities.");
+
+    public static final MultilingualTheme WIKIINFO = new MultilingualTheme("yagoWikipediaInfo",
+            "Stores the sizes, outlinks, and URLs of the Wikipedia articles of the YAGO entities", Theme.ThemeGroup.WIKIPEDIA);
+
+    @Override
+    public Set<Theme> output() {
+        if (isEnglish()) {
+            return new FinalSet<>(WIKIINFONEEDSTYPECHECKANDREDIRECTION.inLanguage(language));
+        }
+        else {
+            return new FinalSet<>(WIKIINFONEEDSTYPECHECKANDTRANSLATIONANDREDIRECTION.inLanguage(language));
+        }
     }
-  }
 
-  public WikiInfoExtractor(String lang, File wikipedia) {
-    super(lang, wikipedia);
-  }
+    @Override
+    public Set<FollowUpExtractor> followUp() {
+        HashSet<FollowUpExtractor> s = new HashSet<>();
+        if (isEnglish()) {
+            s.add(new Redirector(WIKIINFONEEDSTYPECHECKANDREDIRECTION.inLanguage(language), WIKIINFONEEDSTYPECHECK.inLanguage(language), this));
+        }
+        else {
+            s.add(new Redirector(WIKIINFONEEDSTYPECHECKANDTRANSLATIONANDREDIRECTION.inLanguage(language),
+                    WIKIINFONEEDSTYPECHECKANDTRANSLATION.inLanguage(language), this));
+            s.add(new EntityTranslator(WIKIINFONEEDSTYPECHECKANDTRANSLATION.inLanguage(language), WIKIINFONEEDSTYPECHECK.inLanguage(language), this,
+                    true));
+        }
+        s.add(new TypeChecker(WIKIINFONEEDSTYPECHECK.inLanguage(language), WIKIINFO.inLanguage(language), this));
+        return s;
+    }
 
-  public static void main(String[] args) throws Exception {
-    /*    new WikiInfoExtractor("en", new File("c:/Fabian/eclipseProjects/yago2s/testCases/extractors.CategoryExtractor/wikitest.xml")).extract(new File(
+    @Override
+    public void extract() throws Exception {
+        TitleExtractor titleExtractor = TitleExtractor.rawExtractor(language);
+        Reader in = FileUtils.getBufferedUTF8Reader(wikipedia);
+        while (FileLines.scrollTo(in, "<title>")) {
+            String entity = titleExtractor.getTitleEntityRaw(in);
+            if (entity == null)
+                continue;
+            if (!FileLines.scrollTo(in, "<text"))
+                continue;
+            if (!FileLines.scrollTo(in, ">"))
+                continue;
+            String page = FileLines.readToBoundary(in, "</text>");
+            if (page == null)
+                continue;
+            if (isEnglish()) {
+                WIKIINFONEEDSTYPECHECKANDREDIRECTION.inLanguage(language)
+                        .write(new Fact(entity, "<hasWikipediaArticleLength>", FactComponent.forNumber(page.length())));
+                WIKIINFONEEDSTYPECHECKANDREDIRECTION.inLanguage(language)
+                        .write(new Fact(entity, "<hasWikipediaUrl>", FactComponent.wikipediaURL(entity, language)));
+            }
+            else {
+                // This number is per Wikipedia language edition
+                WIKIINFONEEDSTYPECHECKANDTRANSLATIONANDREDIRECTION.inLanguage(language)
+                        .write(new Fact(entity, "<hasWikipediaArticleLength>", FactComponent.forNumber(page.length())));
+                WIKIINFONEEDSTYPECHECKANDTRANSLATIONANDREDIRECTION.inLanguage(language)
+                        .write(new Fact(entity, "<hasWikipediaUrl>", FactComponent.wikipediaURL(entity, language)));
+            }
+            Set<String> targets = new HashSet<>();
+            for (int pos = page.indexOf("[["); pos != -1; pos = page.indexOf("[[", pos + 2)) {
+                int endPos = page.indexOf(']', pos);
+                if (endPos == -1)
+                    continue;
+                String target = page.substring(pos + 2, endPos);
+                endPos = target.indexOf('|');
+                if (endPos != -1)
+                    target = target.substring(0, endPos);
+                target = FactComponent.forForeignWikipediaTitle(target, language);
+                targets.add(target);
+            }
+
+            MultilingualTheme out = isEnglish() ? WIKIINFONEEDSTYPECHECKANDREDIRECTION : WIKIINFONEEDSTYPECHECKANDTRANSLATIONANDREDIRECTION;
+
+            for (String target : targets) {
+                out.inLanguage(language).write(new Fact(entity, "<linksTo>", target));
+            }
+        }
+    }
+
+    public WikiInfoExtractor(String lang, File wikipedia) {
+        super(lang, wikipedia);
+    }
+
+    public static void main(String[] args) throws Exception {
+        /*    new WikiInfoExtractor("en", new File("c:/Fabian/eclipseProjects/yago2s/testCases/extractors.CategoryExtractor/wikitest.xml")).extract(new File(
         "c:/fabian/data/yago3"), "Test on 1 wikipedia article\n");*/
 
-    new WikiInfoExtractor("en", new File("/home/tr/tmp/david_wilson_beaubier.txt")).extract(new File("data/yago3-debug"), "WikiInfoExtractor test");
+        new WikiInfoExtractor("en", new File("/home/tr/tmp/david_wilson_beaubier.txt")).extract(new File("data/yago3-debug"),
+                "WikiInfoExtractor test");
 
-  }
+    }
 }

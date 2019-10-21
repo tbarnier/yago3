@@ -38,41 +38,43 @@ import utils.Theme;
 */
 public abstract class LiteralParser extends TermParser {
 
-  /** Holds the pattern that indicates a result */
-  public static final Pattern resultPattern = Pattern.compile("_result_([^_]++)_([^_]*+)_");
+    /** Holds the pattern that indicates a result */
+    public static final Pattern resultPattern = Pattern.compile("_result_([^_]++)_([^_]*+)_");
 
-  /** Holds the pattern list */
-  public final PatternList patternList;
+    /** Holds the pattern list */
+    public final PatternList patternList;
 
-  /**
-   * Constructs a LiteralParser from a theme that contains patterns
-   * 
-   * @throws IOException
-   */
-  protected LiteralParser(Theme patterns) throws IOException {
-    patternList = new PatternList(patterns, "<mapsTo>");
-  }
-
-  /** Produces a result entity from a String */
-  public abstract String resultEntity(Matcher resultMatch);
-
-  @Override
-  public List<String> extractList(String input) {
-    input = patternList.transform(input);
-    if (input == null) return (Collections.emptyList());
-    List<String> result = new ArrayList<>();
-    // Announce.debug("Done, transformed:", input);
-    Matcher m = resultPattern.matcher(input);
-    while (m.find()) {
-      // Announce.debug("Result entity:", m.group());
-      String resultEntity = resultEntity(m);
-      // Announce.debug("Result entity transformed:", resultEntity);
-      if (resultEntity != null) result.add(resultEntity);
+    /**
+     * Constructs a LiteralParser from a theme that contains patterns
+     * 
+     * @throws IOException
+     */
+    protected LiteralParser(Theme patterns) throws IOException {
+        patternList = new PatternList(patterns, "<mapsTo>");
     }
-    return (result);
-  }
 
-  /** Test method */
-  public static void main(String[] args) throws Exception {
-  }
+    /** Produces a result entity from a String */
+    public abstract String resultEntity(Matcher resultMatch);
+
+    @Override
+    public List<String> extractList(String input) {
+        input = patternList.transform(input);
+        if (input == null)
+            return (Collections.emptyList());
+        List<String> result = new ArrayList<>();
+        // Announce.debug("Done, transformed:", input);
+        Matcher m = resultPattern.matcher(input);
+        while (m.find()) {
+            // Announce.debug("Result entity:", m.group());
+            String resultEntity = resultEntity(m);
+            // Announce.debug("Result entity transformed:", resultEntity);
+            if (resultEntity != null)
+                result.add(resultEntity);
+        }
+        return (result);
+    }
+
+    /** Test method */
+    public static void main(String[] args) throws Exception {
+    }
 }

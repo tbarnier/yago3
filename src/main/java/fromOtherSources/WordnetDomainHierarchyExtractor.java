@@ -22,6 +22,7 @@ along with YAGO.  If not, see <http://www.gnu.org/licenses/>.
 package fromOtherSources;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Set;
 
 import basics.Fact;
@@ -37,33 +38,33 @@ import utils.Theme.ThemeGroup;
 */
 public class WordnetDomainHierarchyExtractor extends HardExtractor {
 
-  /** Patterns of infoboxes */
-  public static final Theme WORDNETDOMAINHIERARCHY = new Theme("yagoWordnetDomainHierarchy",
-      "The hierarchy of WordNet Domains from http://wndomains.fbk.eu", ThemeGroup.LINK);
+    /** Patterns of infoboxes */
+    public static final Theme WORDNETDOMAINHIERARCHY = new Theme("yagoWordnetDomainHierarchy",
+            "The hierarchy of WordNet Domains from http://wndomains.fbk.eu", ThemeGroup.LINK);
 
-  @Override
-  public Set<Theme> output() {
-    return (new FinalSet<Theme>(WORDNETDOMAINHIERARCHY));
-  }
-
-  @Override
-  public void extract() throws Exception {
-    Announce.doing("Copying wordnet domain hierarchy");
-    for (Fact f : FactSource.from(new File(inputData, "_wordnetDomainHierarchy.ttl"))) {
-      WORDNETDOMAINHIERARCHY.write(f);
+    @Override
+    public Set<Theme> output() {
+        return (new FinalSet<Theme>(WORDNETDOMAINHIERARCHY));
     }
-    Announce.done();
-  }
 
-  public WordnetDomainHierarchyExtractor(File inputFolder) {
-    super(inputFolder);
-  }
+    @Override
+    public void extract() throws Exception {
+        Announce.doing("Copying wordnet domain hierarchy");
+        for (Fact f : FactSource.from(new File(inputData, "_wordnetDomainHierarchy.ttl"))) {
+            WORDNETDOMAINHIERARCHY.write(f);
+        }
+        Announce.done();
+    }
 
-  public WordnetDomainHierarchyExtractor() {
-    this(new File("./data/wordnetDomains"));
-  }
+    public WordnetDomainHierarchyExtractor(File inputFolder) throws IOException {
+        super(inputFolder);
+    }
 
-  public static void main(String[] args) throws Exception {
-    new WordnetDomainHierarchyExtractor(new File("./data")).extract(new File("c:/fabian/data/yago2s"), "test");
-  }
+    public WordnetDomainHierarchyExtractor() throws IOException {
+        this(new File("./data/wordnetDomains"));
+    }
+
+    public static void main(String[] args) throws Exception {
+        new WordnetDomainHierarchyExtractor(new File("./data")).extract(new File("c:/fabian/data/yago2s"), "test");
+    }
 }

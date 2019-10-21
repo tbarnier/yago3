@@ -47,49 +47,49 @@ import utils.Theme.ThemeGroup;
 
 public class DateExtractor extends SimpleDeduplicator {
 
-  @Override
-  @Fact.ImplementationNote("Hardwired facts go first. Infoboxes should go before categories")
-  public List<Theme> inputOrdered() {
-    List<Theme> input = new ArrayList<Theme>();
-    input.add(SchemaExtractor.YAGOSCHEMA);
-    input.add(HardExtractor.HARDWIREDFACTS);
-    input.addAll(InfoboxMapper.INFOBOXFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    input.addAll(CategoryMapper.CATEGORYFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    input.add(RuleExtractor.RULERESULTS);
-    //		input.add(TemporalCategoryExtractor.TEMPORALCATEGORYFACTS);
-    input.add(TemporalInfoboxExtractor.TEMPORALINFOBOXFACTS);
-    return input;
-  }
+    @Override
+    @Fact.ImplementationNote("Hardwired facts go first. Infoboxes should go before categories")
+    public List<Theme> inputOrdered() {
+        List<Theme> input = new ArrayList<Theme>();
+        input.add(SchemaExtractor.YAGOSCHEMA);
+        input.add(HardExtractor.HARDWIREDFACTS);
+        input.addAll(InfoboxMapper.INFOBOXFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        input.addAll(CategoryMapper.CATEGORYFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        input.add(RuleExtractor.RULERESULTS);
+        //		input.add(TemporalCategoryExtractor.TEMPORALCATEGORYFACTS);
+        input.add(TemporalInfoboxExtractor.TEMPORALINFOBOXFACTS);
+        return input;
+    }
 
-  /** All facts of YAGO */
-  public static final Theme YAGODATEFACTS = new Theme("yagoDateFacts", "All facts of YAGO that contain dates", ThemeGroup.CORE);
+    /** All facts of YAGO */
+    public static final Theme YAGODATEFACTS = new Theme("yagoDateFacts", "All facts of YAGO that contain dates", ThemeGroup.CORE);
 
-  /** All facts of YAGO */
-  public static final Theme DATEFACTCONFLICTS = new Theme("_dateFactConflicts",
-      "Date facts that were not added because they conflicted with an existing fact");
+    /** All facts of YAGO */
+    public static final Theme DATEFACTCONFLICTS = new Theme("_dateFactConflicts",
+            "Date facts that were not added because they conflicted with an existing fact");
 
-  @Override
-  public Theme conflicts() {
-    return DATEFACTCONFLICTS;
-  }
+    @Override
+    public Theme conflicts() {
+        return DATEFACTCONFLICTS;
+    }
 
-  /** relations that we treat */
-  public static final Set<String> relationsIncluded = new FinalSet<>("<wasBornOnDate>", "<diedOnDate>", "<wasCreatedOnDate>", "<wasDestroyedOnDate>",
-      "<happenedOnDate>", "<startedOnDate>", "<endedOnDate>");
+    /** relations that we treat */
+    public static final Set<String> relationsIncluded = new FinalSet<>("<wasBornOnDate>", "<diedOnDate>", "<wasCreatedOnDate>",
+            "<wasDestroyedOnDate>", "<happenedOnDate>", "<startedOnDate>", "<endedOnDate>");
 
-  @Override
-  public Theme myOutput() {
-    return YAGODATEFACTS;
-  }
+    @Override
+    public Theme myOutput() {
+        return YAGODATEFACTS;
+    }
 
-  @Override
-  public boolean isMyRelation(Fact fact) {
-    return (relationsIncluded.contains(fact.getRelation()));
-  }
+    @Override
+    public boolean isMyRelation(Fact fact) {
+        return (relationsIncluded.contains(fact.getRelation()));
+    }
 
-  public static void main(String[] args) throws Exception {
-    //Announce.setLevel(Announce.Level.DEBUG);
-    new DateExtractor().extract(new File("/san/suchanek/yago3-2017-02-20"), "test");
-  }
+    public static void main(String[] args) throws Exception {
+        //Announce.setLevel(Announce.Level.DEBUG);
+        new DateExtractor().extract(new File("/san/suchanek/yago3-2017-02-20"), "test");
+    }
 
 }

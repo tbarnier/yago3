@@ -43,58 +43,59 @@ import java.util.Set;
 */
 public class SPOTLXRuleExtractor extends BaseRuleExtractor {
 
-  /*
-   * Non follow-up extractors should not be declared as follow-up
-   * 
-   * public Set<FollowUpExtractor> followUp() { return (new
-   * HashSet<FollowUpExtractor>( Arrays.asList(new
-   * SPOTLXDeductiveExtractor(1)))); }
-   */
+    /*
+     * Non follow-up extractors should not be declared as follow-up
+     * 
+     * public Set<FollowUpExtractor> followUp() { return (new
+     * HashSet<FollowUpExtractor>( Arrays.asList(new
+     * SPOTLXDeductiveExtractor(1)))); }
+     */
 
-  @Override
-  public Set<Theme> input() {
-    return new FinalSet<>(PatternHardExtractor.SPOTLX_ENTITY_RULES, PatternHardExtractor.HARDWIREDFACTS, TransitiveTypeSubgraphExtractor.YAGOTRANSITIVETYPE,
-        DateExtractor.YAGODATEFACTS, FactExtractor.YAGOFACTS, LiteralFactExtractor.YAGOLITERALFACTS);
-  }
+    @Override
+    public Set<Theme> input() {
+        return new FinalSet<>(PatternHardExtractor.SPOTLX_ENTITY_RULES, PatternHardExtractor.HARDWIREDFACTS,
+                TransitiveTypeSubgraphExtractor.YAGOTRANSITIVETYPE, DateExtractor.YAGODATEFACTS, FactExtractor.YAGOFACTS,
+                LiteralFactExtractor.YAGOLITERALFACTS);
+    }
 
-  /** Themes of spotlx deductions */
-  public static final Theme RULERESULTS = new Theme("spotlxEntityFacts", "SPOTLX deduced facts");
+    /** Themes of spotlx deductions */
+    public static final Theme RULERESULTS = new Theme("spotlxEntityFacts", "SPOTLX deduced facts");
 
-  public static final Theme RULESOURCES = new Theme("spotlxEntitySources", "SPOTLX deduced facts");
+    public static final Theme RULESOURCES = new Theme("spotlxEntitySources", "SPOTLX deduced facts");
 
-  @Override
-  public Theme getRULERESULTS() {
-    return RULERESULTS;
-  }
+    @Override
+    public Theme getRULERESULTS() {
+        return RULERESULTS;
+    }
 
-  @Override
-  public Theme getRULESOURCES() {
-    return RULESOURCES;
-  }
+    @Override
+    public Theme getRULESOURCES() {
+        return RULESOURCES;
+    }
 
-  @Override
-  public Set<Theme> output() {
-    return new FinalSet<>(RULERESULTS, RULESOURCES);
-  }
+    @Override
+    public Set<Theme> output() {
+        return new FinalSet<>(RULERESULTS, RULESOURCES);
+    }
 
-  @Override
-  public Set<Theme> inputCached() {
-    return new FinalSet<>(PatternHardExtractor.SPOTLX_ENTITY_RULES);
-  }
+    @Override
+    public Set<Theme> inputCached() {
+        return new FinalSet<>(PatternHardExtractor.SPOTLX_ENTITY_RULES);
+    }
 
-  @Override
-  public FactCollection getInputRuleCollection() throws Exception {
-    // FactSource spotlxRelationRules =
-    // input.get(PatternHardExtractor.SPOTLX_ENTITY_RULES);
-    // FactCollection collection = new FactCollection(spotlxRelationRules);
-    return PatternHardExtractor.SPOTLX_ENTITY_RULES.factCollection();
-  }
+    @Override
+    public FactCollection getInputRuleCollection() throws Exception {
+        // FactSource spotlxRelationRules =
+        // input.get(PatternHardExtractor.SPOTLX_ENTITY_RULES);
+        // FactCollection collection = new FactCollection(spotlxRelationRules);
+        return PatternHardExtractor.SPOTLX_ENTITY_RULES.factCollection();
+    }
 
-  public static void main(String[] args) throws Exception {
-    new PatternHardExtractor(new File("./data")).extract(new File("/home/jbiega/data/yago2s"), "test");
-    new HardExtractor(new File("../basics2s/data")).extract(new File("/home/jbiega/data/yago2s"), "test");
-    Announce.setLevel(Announce.Level.DEBUG);
-    new SPOTLXRuleExtractor().extract(new File("/home/jbiega/data/yago2s"), "test");
-  }
+    public static void main(String[] args) throws Exception {
+        new PatternHardExtractor(new File("./data")).extract(new File("/home/jbiega/data/yago2s"), "test");
+        new HardExtractor(new File("../basics2s/data")).extract(new File("/home/jbiega/data/yago2s"), "test");
+        Announce.setLevel(Announce.Level.DEBUG);
+        new SPOTLXRuleExtractor().extract(new File("/home/jbiega/data/yago2s"), "test");
+    }
 
 }

@@ -48,115 +48,118 @@ import utils.Theme;
  * 
 */
 public class WikidataEntityGeoCoordinateExtractor extends DataExtractor {
- 
-  public static final Theme WIKIDATAENTITYGEOCOORDINATES = new Theme("wikidataEntityGeoCoordinates", 
-      "Geo Coordinates extracted from wikidata for entities.");
-  
-  public static final Theme WIKIDATAENTITYGEOCOORDINATESNEEDSTYPECHECK = new Theme("wikidataEntityGeoCoordinatesNeedsTypeCheck", 
-      "Geo Coordinates extracted from wikidata for entities.");
-  
-  private static final String WIKIDATA = "wikidata";
- 
-  private static final Map<String, String> yagoEntityMostEnglish = new HashMap<String, String>();
-  
-  private static final String wikidataEntityIdPrefix = "<http://www.wikidata.org/entity/";
-  private static final Pattern WikidataStatementPattern = Pattern.compile("<http://www.wikidata.org/entity/statement/(Q\\d+)-.+>");
-  
-  public WikidataEntityGeoCoordinateExtractor(File wikidata) {
-    super(wikidata);
-  }
-  
-  public WikidataEntityGeoCoordinateExtractor() {
-    this(Parameters.getFile(WIKIDATA));
-  }
 
-  @Override
-  public Set<Theme> input() {
-    return (new FinalSet<>(WikidataLabelExtractor.WIKIDATAINSTANCES));
-  }
+    public static final Theme WIKIDATAENTITYGEOCOORDINATES = new Theme("wikidataEntityGeoCoordinates",
+            "Geo Coordinates extracted from wikidata for entities.");
 
-  @Override
-  public Set<Theme> output() {
-    return (new FinalSet<>(WIKIDATAENTITYGEOCOORDINATESNEEDSTYPECHECK));
-  }
-  
-  @Override
-  public Set<followUp.FollowUpExtractor> followUp() {
-    Set<FollowUpExtractor> result = new HashSet<FollowUpExtractor>();
-    
-    result.add(new TypeChecker(WIKIDATAENTITYGEOCOORDINATESNEEDSTYPECHECK, WIKIDATAENTITYGEOCOORDINATES, this));
-    
-    return result;
-  }
-  
-  static final Pattern POINT = Pattern.compile("Point\\(([-\\.\\d]+) ([-\\.\\d]+)\\)");
-  static final int LONGITUDE = 1, LATITUDE = 2;
-  
-  @Override
-  public void extract() throws Exception {
-    
-    // Loading the map from wikidataIds to the most English yago entity.
-    loadMostEnglishEntities();
-    
-    N4Reader nr = new N4Reader(inputData);
-    while(nr.hasNext()) {
-      Fact f = nr.next();
-//    Fact:<http://www.wikidata.org/entity/Q22> <http://www.wikidata.org/prop/direct/P625> "Point(-5 57)"^^<http://www.opengis.net/ont/geosparql#wktLiteral>
-      if (f.getRelation().endsWith("/P625>")) {
-//         Select the most English entity.
-        String wikidataId = f.getSubject();
-        Matcher statementMatcher = WikidataStatementPattern.matcher(wikidataId);
-        if (statementMatcher.find()) {
-          wikidataId = wikidataEntityIdPrefix + statementMatcher.group(1) + ">";
+    public static final Theme WIKIDATAENTITYGEOCOORDINATESNEEDSTYPECHECK = new Theme("wikidataEntityGeoCoordinatesNeedsTypeCheck",
+            "Geo Coordinates extracted from wikidata for entities.");
+
+    private static final String WIKIDATA = "wikidata";
+
+    private static final Map<String, String> yagoEntityMostEnglish = new HashMap<>();
+
+    private static final String wikidataEntityIdPrefix = "<http://www.wikidata.org/entity/";
+
+    private static final Pattern WikidataStatementPattern = Pattern.compile("<http://www.wikidata.org/entity/statement/(Q\\d+)-.+>");
+
+    public WikidataEntityGeoCoordinateExtractor(File wikidata) throws IOException {
+        super(wikidata);
+    }
+
+    public WikidataEntityGeoCoordinateExtractor() throws IOException {
+        this(Parameters.getFile(WIKIDATA));
+    }
+
+    @Override
+    public Set<Theme> input() {
+        return (new FinalSet<>(WikidataLabelExtractor.WIKIDATAINSTANCES));
+    }
+
+    @Override
+    public Set<Theme> output() {
+        return (new FinalSet<>(WIKIDATAENTITYGEOCOORDINATESNEEDSTYPECHECK));
+    }
+
+    @Override
+    public Set<followUp.FollowUpExtractor> followUp() {
+        Set<FollowUpExtractor> result = new HashSet<FollowUpExtractor>();
+
+        result.add(new TypeChecker(WIKIDATAENTITYGEOCOORDINATESNEEDSTYPECHECK, WIKIDATAENTITYGEOCOORDINATES, this));
+
+        return result;
+    }
+
+    static final Pattern POINT = Pattern.compile("Point\\(([-\\.\\d]+) ([-\\.\\d]+)\\)");
+
+    static final int LONGITUDE = 1, LATITUDE = 2;
+
+    @Override
+    public void extract() throws Exception {
+
+        // Loading the map from wikidataIds to the most English yago entity.
+        loadMostEnglishEntities();
+
+        N4Reader nr = new N4Reader(inputData);
+        while (nr.hasNext()) {
+            Fact f = nr.next();
+            //    Fact:<http://www.wikidata.org/entity/Q22> <http://www.wikidata.org/prop/direct/P625> "Point(-5 57)"^^<http://www.opengis.net/ont/geosparql#wktLiteral>
+            if (f.getRelation().endsWith("/P625>")) {
+                //         Select the most English entity.
+                String wikidataId = f.getSubject();
+                Matcher statementMatcher = WikidataStatementPattern.matcher(wikidataId);
+                if (statementMatcher.find()) {
+                    wikidataId = wikidataEntityIdPrefix + statementMatcher.group(1) + ">";
+                }
+                String yagoEntity = yagoEntityMostEnglish.get(wikidataId);
+                if (yagoEntity != null) {
+                    Matcher matcher = POINT.matcher(f.getObject());
+                    if (matcher.find()) {
+                        WIKIDATAENTITYGEOCOORDINATESNEEDSTYPECHECK.write(
+                                new Fact(yagoEntity, YAGO.hasLatitude, FactComponent.forStringWithDatatype(matcher.group(LATITUDE), "<degrees>")));
+                        WIKIDATAENTITYGEOCOORDINATESNEEDSTYPECHECK.write(
+                                new Fact(yagoEntity, YAGO.hasLongitude, FactComponent.forStringWithDatatype(matcher.group(LONGITUDE), "<degrees>")));
+                    }
+                }
+            }
         }
-        String yagoEntity = yagoEntityMostEnglish.get(wikidataId);
-        if(yagoEntity != null) {
-          Matcher matcher = POINT.matcher(f.getObject());
-          if (matcher.find()) {
-            WIKIDATAENTITYGEOCOORDINATESNEEDSTYPECHECK.write(new Fact(yagoEntity, YAGO.hasLatitude, FactComponent.forStringWithDatatype(matcher.group(LATITUDE), "<degrees>")));
-            WIKIDATAENTITYGEOCOORDINATESNEEDSTYPECHECK.write(new Fact(yagoEntity, YAGO.hasLongitude, FactComponent.forStringWithDatatype(matcher.group(LONGITUDE), "<degrees>")));
-          }
-        }
-      }
-    }
-    
-    nr.close();
-  }
-  
-  /**
-   * Fill the map yagoEntityMostEnglish which maps from WikidataId to the most English yago entity.
-   * @throws IOException
-   */
-  private void loadMostEnglishEntities() throws IOException {
-    FactCollection reverseWikidataInstances = WikidataLabelExtractor.WIKIDATAINSTANCES.factCollection().getReverse();
-    
-    for(String subject:reverseWikidataInstances.getSubjects()) {
-      yagoEntityMostEnglish.put(subject, getMostEnglishEntityName(reverseWikidataInstances.getFactsWithSubjectAndRelation(subject, RDFS.sameas))); 
-    }
-    
-  }
 
-  /**
-   * Return the most English entity name given all entity names available
-   * @param entityFacts yago entity in different languages
-   * @return most English entity name
-   */
-  private static String getMostEnglishEntityName(Set<Fact> entityFacts){
-    // Map of entity names for each language 
-    Map<String, String> languageEntityName = new HashMap<>();
-    // each entityFact is like: <http://www.wikidata.org/entity/Q23>  owl:sameAs <George_Washington>
-    for(Fact f:entityFacts){
-      String language = FactComponent.getLanguageOfEntity(f.getObject());
-      if (language != null)
-        languageEntityName.put(language, f.getObject());
-      else
-        languageEntityName.put("en", f.getObject());
+        nr.close();
     }
-    
-    String mostEnglishLanguage = DictionaryExtractor.mostEnglishLanguage(languageEntityName.keySet());
-    return languageEntityName.get(mostEnglishLanguage);
-  }
-  
+
+    /**
+     * Fill the map yagoEntityMostEnglish which maps from WikidataId to the most English yago entity.
+     * @throws IOException
+     */
+    private void loadMostEnglishEntities() throws IOException {
+        FactCollection reverseWikidataInstances = WikidataLabelExtractor.WIKIDATAINSTANCES.factCollection().getReverse();
+
+        for (String subject : reverseWikidataInstances.getSubjects()) {
+            yagoEntityMostEnglish.put(subject,
+                    getMostEnglishEntityName(reverseWikidataInstances.getFactsWithSubjectAndRelation(subject, RDFS.sameas)));
+        }
+
+    }
+
+    /**
+     * Return the most English entity name given all entity names available
+     * @param entityFacts yago entity in different languages
+     * @return most English entity name
+     */
+    private static String getMostEnglishEntityName(Set<Fact> entityFacts) {
+        // Map of entity names for each language 
+        Map<String, String> languageEntityName = new HashMap<>();
+        // each entityFact is like: <http://www.wikidata.org/entity/Q23>  owl:sameAs <George_Washington>
+        for (Fact f : entityFacts) {
+            String language = FactComponent.getLanguageOfEntity(f.getObject());
+            if (language != null)
+                languageEntityName.put(language, f.getObject());
+            else
+                languageEntityName.put("en", f.getObject());
+        }
+
+        String mostEnglishLanguage = DictionaryExtractor.mostEnglishLanguage(languageEntityName.keySet());
+        return languageEntityName.get(mostEnglishLanguage);
+    }
+
 }
-
-

@@ -39,27 +39,26 @@ import utils.Theme;
 
 public class CategoryTranslator extends EntityTranslator {
 
-  @Override
-  protected String translateObject(String object, Map<String, String> dictionary) {
-    return dictionary.get(object);
-  }
-
-  public CategoryTranslator(Theme in, Theme out, Extractor parent) {
-    this(in, out, parent, false, false);
-  }
-  
-  public CategoryTranslator(Theme in, Theme out, Extractor parent, boolean categoryAsSubject, boolean graceful) {
-    super(in, out, parent, graceful);
-    if (categoryAsSubject) {
-      subjectDictionaryTheme = DictionaryExtractor.CATEGORY_DICTIONARY.inLanguage(language);
+    @Override
+    protected String translateObject(String object, Map<String, String> dictionary) {
+        return dictionary.get(object);
     }
-    objectDictionaryTheme = DictionaryExtractor.CATEGORY_DICTIONARY.inLanguage(language);
-  }
-  
 
-  public static void main(String[] args) throws Exception {
-    Theme res = new Theme("categoryMembersTranslated_de", "");
-    new CategoryTranslator(CategoryExtractor.CATEGORYMEMBERS.inLanguage("de"), res, null).extract(new File("c:/fabian/data/yago3"), "test");
-  }
+    public CategoryTranslator(Theme in, Theme out, Extractor parent) {
+        this(in, out, parent, false, false);
+    }
+
+    public CategoryTranslator(Theme in, Theme out, Extractor parent, boolean categoryAsSubject, boolean graceful) {
+        super(in, out, parent, graceful);
+        if (categoryAsSubject) {
+            subjectDictionaryTheme = DictionaryExtractor.CATEGORY_DICTIONARY.inLanguage(language);
+        }
+        objectDictionaryTheme = DictionaryExtractor.CATEGORY_DICTIONARY.inLanguage(language);
+    }
+
+    public static void main(String[] args) throws Exception {
+        Theme res = new Theme("categoryMembersTranslated_de", "");
+        new CategoryTranslator(CategoryExtractor.CATEGORYMEMBERS.inLanguage("de"), res, null).extract(new File("c:/fabian/data/yago3"), "test");
+    }
 
 }

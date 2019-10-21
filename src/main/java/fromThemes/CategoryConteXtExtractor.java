@@ -39,47 +39,48 @@ import java.util.TreeSet;
 */
 public class CategoryConteXtExtractor extends MultilingualExtractor {
 
-  public static final MultilingualTheme CATEGORY_CONTEXT = new MultilingualTheme("categoryConteXt",
-          "Cleaned entity categories extracted from Wikipedia.");
+    public static final MultilingualTheme CATEGORY_CONTEXT = new MultilingualTheme("categoryConteXt",
+            "Cleaned entity categories extracted from Wikipedia.");
 
-  public static final MultilingualTheme CATEGORY_CONTEXT_ENTITIES_TRANSLATED = new MultilingualTheme("categoryConteXtEntitiesTranslated",
-          "Cleaned entity categories extracted from Wikipedia with translated subjects");
+    public static final MultilingualTheme CATEGORY_CONTEXT_ENTITIES_TRANSLATED = new MultilingualTheme("categoryConteXtEntitiesTranslated",
+            "Cleaned entity categories extracted from Wikipedia with translated subjects");
 
-  @Override
-  public Set<Theme> input() {
-    Set<Theme> result = new TreeSet<>();
-    if (isEnglish()) {
-      result.add(CategoryExtractor.CATEGORYMEMBERS.inLanguage(language));
-    } else {
-      result.add(CategoryExtractor.CATEGORYMEMBERS_ENTITIES_TRANSLATED.inLanguage(language));
+    @Override
+    public Set<Theme> input() {
+        Set<Theme> result = new TreeSet<>();
+        if (isEnglish()) {
+            result.add(CategoryExtractor.CATEGORYMEMBERS.inLanguage(language));
+        }
+        else {
+            result.add(CategoryExtractor.CATEGORYMEMBERS_ENTITIES_TRANSLATED.inLanguage(language));
+        }
+        return result;
     }
-    return result;
-  }
 
-  @Override
-  public Set<Theme> output() {
-    return new HashSet<>();
-  }
-
-  @Override
-  public Set<FollowUpExtractor> followUp() {
-    Set<FollowUpExtractor> followUps = new HashSet<>();
-    if (isEnglish()) {
-      followUps.add(new TypeChecker(CategoryExtractor.CATEGORYMEMBERS.inEnglish(), CATEGORY_CONTEXT.inEnglish()));
-    } else {
-      followUps.add(new TypeChecker(
-              CategoryExtractor.CATEGORYMEMBERS_ENTITIES_TRANSLATED.inLanguage(this.language),
-              CATEGORY_CONTEXT_ENTITIES_TRANSLATED.inLanguage(this.language)));
+    @Override
+    public Set<Theme> output() {
+        return new HashSet<>();
     }
-    return followUps;
-  }
 
-  @Override
-  public void extract() throws Exception {
-    // Nothing to do here, the sole purpose of this class is to type-check.
-  }
+    @Override
+    public Set<FollowUpExtractor> followUp() {
+        Set<FollowUpExtractor> followUps = new HashSet<>();
+        if (isEnglish()) {
+            followUps.add(new TypeChecker(CategoryExtractor.CATEGORYMEMBERS.inEnglish(), CATEGORY_CONTEXT.inEnglish()));
+        }
+        else {
+            followUps.add(new TypeChecker(CategoryExtractor.CATEGORYMEMBERS_ENTITIES_TRANSLATED.inLanguage(this.language),
+                    CATEGORY_CONTEXT_ENTITIES_TRANSLATED.inLanguage(this.language)));
+        }
+        return followUps;
+    }
 
-  public CategoryConteXtExtractor(String lang) {
-    super(lang);
-  }
+    @Override
+    public void extract() throws Exception {
+        // Nothing to do here, the sole purpose of this class is to type-check.
+    }
+
+    public CategoryConteXtExtractor(String lang) {
+        super(lang);
+    }
 }

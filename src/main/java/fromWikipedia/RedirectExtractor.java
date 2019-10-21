@@ -52,98 +52,101 @@ import utils.Theme;
 */
 public class RedirectExtractor extends MultilingualWikipediaExtractor {
 
-  @Override
-  public Set<Theme> input() {
-    return new FinalSet<Theme>(PatternHardExtractor.LANGUAGECODEMAPPING);
-  }
-
-  private static final Pattern pattern = Pattern.compile("\\[\\[([^#\\]]*?)\\]\\]");
-
-  public static final MultilingualTheme REDIRECT_FACTS_DIRTY = new MultilingualTheme("redirectLabelsNeedsTranslationTypeChecking",
-      "Redirect facts from Wikipedia redirect pages (to be type checked and translated)");
-
-  public static final MultilingualTheme TRANSLATEDREDIRECTFACTSDIRTY = new MultilingualTheme("redirectLabelsNeedsTypeChecking",
-      "Redirect facts from Wikipedia redirect pages (to be type checked)");
-
-  public static final MultilingualTheme REDIRECTFACTS = new MultilingualTheme("yagoRedirectLabels", "Labels from Wikipedia redirect pages");
-
-  @Override
-  public Set<FollowUpExtractor> followUp() {
-    HashSet<FollowUpExtractor> s = new HashSet<>();
-    if (isEnglish()) {
-      s.add(new TypeChecker(REDIRECT_FACTS_DIRTY.inLanguage(language), REDIRECTFACTS.inLanguage(language)));
-    } else {
-      s.add(new EntityTranslator(REDIRECT_FACTS_DIRTY.inLanguage(language), TRANSLATEDREDIRECTFACTSDIRTY.inLanguage(language), this));
-      s.add(new TypeChecker(TRANSLATEDREDIRECTFACTSDIRTY.inLanguage(language), REDIRECTFACTS.inLanguage(language)));
-    }
-    return s;
-  }
-
-  @Override
-  public Set<Theme> output() {
-    return new FinalSet<Theme>(REDIRECT_FACTS_DIRTY.inLanguage(this.language));
-  }
-
-  @Override
-  public void extract() throws Exception {
-    // Extract the information
-    Announce.doing("Extracting Redirects");
-    Map<String, String> redirects = new HashMap<>();
-
-    Map<String, String> languagemap = PatternHardExtractor.LANGUAGECODEMAPPING.factCollection().getStringMap("<hasThreeLetterLanguageCode>");
-
-    BufferedReader in = FileUtils.getBufferedUTF8Reader(wikipedia);
-
-    String titleEntity = null;
-    redirect: while (true) {
-      switch (FileLines.findIgnoreCase(in, "<title>", "<redirect")) {
-        case -1:
-          Announce.done();
-          in.close();
-          break redirect;
-        case 0:
-          titleEntity = Char17.decodeAmpersand(FileLines.readToBoundary(in, "</title>"));
-          break;
-        default:
-          if (titleEntity == null) continue;
-          FileLines.readTo(in, "<text");
-          String redirectText = FileLines.readTo(in, "</text>").toString().trim();
-          String redirectTarget = getRedirectTarget(redirectText);
-
-          if (redirectTarget != null) {
-            redirects.put(titleEntity, redirectTarget);
-          }
-      }
+    @Override
+    public Set<Theme> input() {
+        return new FinalSet<Theme>(PatternHardExtractor.LANGUAGECODEMAPPING);
     }
 
-    Theme out = REDIRECT_FACTS_DIRTY.inLanguage(this.language);
+    private static final Pattern pattern = Pattern.compile("\\[\\[([^#\\]]*?)\\]\\]");
 
-    for (Entry<String, String> redirect : redirects.entrySet()) {
-      out.write(new Fact(FactComponent.forForeignYagoEntity(redirect.getValue(), this.language), "<redirectedFrom>",
-          FactComponent.forStringWithLanguage(redirect.getKey(), this.language, languagemap)));
+    public static final MultilingualTheme REDIRECT_FACTS_DIRTY = new MultilingualTheme("redirectLabelsNeedsTranslationTypeChecking",
+            "Redirect facts from Wikipedia redirect pages (to be type checked and translated)");
+
+    public static final MultilingualTheme TRANSLATEDREDIRECTFACTSDIRTY = new MultilingualTheme("redirectLabelsNeedsTypeChecking",
+            "Redirect facts from Wikipedia redirect pages (to be type checked)");
+
+    public static final MultilingualTheme REDIRECTFACTS = new MultilingualTheme("yagoRedirectLabels", "Labels from Wikipedia redirect pages");
+
+    @Override
+    public Set<FollowUpExtractor> followUp() {
+        HashSet<FollowUpExtractor> s = new HashSet<>();
+        if (isEnglish()) {
+            s.add(new TypeChecker(REDIRECT_FACTS_DIRTY.inLanguage(language), REDIRECTFACTS.inLanguage(language)));
+        }
+        else {
+            s.add(new EntityTranslator(REDIRECT_FACTS_DIRTY.inLanguage(language), TRANSLATEDREDIRECTFACTSDIRTY.inLanguage(language), this));
+            s.add(new TypeChecker(TRANSLATEDREDIRECTFACTSDIRTY.inLanguage(language), REDIRECTFACTS.inLanguage(language)));
+        }
+        return s;
     }
 
-    Announce.done();
-  }
-
-  private String getRedirectTarget(String redirect) {
-    Matcher m = pattern.matcher(redirect);
-
-    if (m.find()) {
-      String entity = m.group(1);
-      entity = entity.substring(0, 1).toUpperCase() + (entity.length() > 1 ? entity.substring(1, entity.length()):"");
-      return entity;
-    } else {
-      return null;
+    @Override
+    public Set<Theme> output() {
+        return new FinalSet<Theme>(REDIRECT_FACTS_DIRTY.inLanguage(this.language));
     }
-  }
 
-  public RedirectExtractor(String lang, File wikipedia) {
-    super(lang, wikipedia);
-  }
+    @Override
+    public void extract() throws Exception {
+        // Extract the information
+        Announce.doing("Extracting Redirects");
+        Map<String, String> redirects = new HashMap<>();
 
-  public static void main(String[] args) throws Exception {
-    Announce.setLevel(Announce.Level.DEBUG);
-    new RedirectExtractor("en", new File("D:/en_wikitest.xml")).extract(new File("D:/data3/yago2s"), "Test on 1 wikipedia article");
-  }
+        Map<String, String> languagemap = PatternHardExtractor.LANGUAGECODEMAPPING.factCollection().getStringMap("<hasThreeLetterLanguageCode>");
+
+        BufferedReader in = FileUtils.getBufferedUTF8Reader(wikipedia);
+
+        String titleEntity = null;
+        redirect: while (true) {
+            switch (FileLines.findIgnoreCase(in, "<title>", "<redirect")) {
+                case -1:
+                    Announce.done();
+                    in.close();
+                    break redirect;
+                case 0:
+                    titleEntity = Char17.decodeAmpersand(FileLines.readToBoundary(in, "</title>"));
+                    break;
+                default:
+                    if (titleEntity == null)
+                        continue;
+                    FileLines.readTo(in, "<text");
+                    String redirectText = FileLines.readTo(in, "</text>").toString().trim();
+                    String redirectTarget = getRedirectTarget(redirectText);
+
+                    if (redirectTarget != null) {
+                        redirects.put(titleEntity, redirectTarget);
+                    }
+            }
+        }
+
+        Theme out = REDIRECT_FACTS_DIRTY.inLanguage(this.language);
+
+        for (Entry<String, String> redirect : redirects.entrySet()) {
+            out.write(new Fact(FactComponent.forForeignYagoEntity(redirect.getValue(), this.language), "<redirectedFrom>",
+                    FactComponent.forStringWithLanguage(redirect.getKey(), this.language, languagemap)));
+        }
+
+        Announce.done();
+    }
+
+    private String getRedirectTarget(String redirect) {
+        Matcher m = pattern.matcher(redirect);
+
+        if (m.find()) {
+            String entity = m.group(1);
+            entity = entity.substring(0, 1).toUpperCase() + (entity.length() > 1 ? entity.substring(1, entity.length()) : "");
+            return entity;
+        }
+        else {
+            return null;
+        }
+    }
+
+    public RedirectExtractor(String lang, File wikipedia) {
+        super(lang, wikipedia);
+    }
+
+    public static void main(String[] args) throws Exception {
+        Announce.setLevel(Announce.Level.DEBUG);
+        new RedirectExtractor("en", new File("D:/en_wikitest.xml")).extract(new File("D:/data3/yago2s"), "Test on 1 wikipedia article");
+    }
 }

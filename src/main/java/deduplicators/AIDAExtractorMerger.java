@@ -44,98 +44,94 @@ import java.util.Set;
 
 public class AIDAExtractorMerger extends Extractor {
 
-  /** All facts of YAGO */
-  public static final Theme AIDAFACTS = new Theme("aidaFacts", "All facts necessary for AIDA", ThemeGroup.OTHER);
+    /** All facts of YAGO */
+    public static final Theme AIDAFACTS = new Theme("aidaFacts", "All facts necessary for AIDA", ThemeGroup.OTHER);
 
-  /** Relations that AIDA needs. */
-  public static final Set<String> relations = new FinalSet<>(RDFS.type, RDFS.subclassOf, RDFS.label, YAGO.hasPreferredName, RDFS.sameas, "<hasGivenName>", "<hasFamilyName>",
-      "<hasGender>", "<hasAnchorText>", "<hasInternalWikipediaLinkTo>", "<redirectedFrom>", "<hasWikipediaUrl>", "<hasCitationTitle>",
-      "<hasWikipediaCategory>", "<hasWikipediaAnchorText>", "<_hasTranslation>", "<hasWikipediaId>", "<_yagoMetadata>",
-      YAGO.hasImageID, YAGO.hasWikiPage, YAGO.hasImageUrl, YAGO.hasGloss, YAGO.hasLicense, YAGO.hasAuthor, YAGO.hasTrademark,
-      YAGO.hasName, YAGO.hasUrl, YAGO.hasOTRSId, YAGO.hasShortDescription, YAGO.hasLongDescription, YAGO.isNamedEntity, "<_hasLinkLikelihood>");
+    /** Relations that AIDA needs. */
+    public static final Set<String> relations = new FinalSet<>(RDFS.type, RDFS.subclassOf, RDFS.label, YAGO.hasPreferredName, RDFS.sameas,
+            "<hasGivenName>", "<hasFamilyName>", "<hasGender>", "<hasAnchorText>", "<hasInternalWikipediaLinkTo>", "<redirectedFrom>",
+            "<hasWikipediaUrl>", "<hasCitationTitle>", "<hasWikipediaCategory>", "<hasWikipediaAnchorText>", "<_hasTranslation>", "<hasWikipediaId>",
+            "<_yagoMetadata>", YAGO.hasImageID, YAGO.hasWikiPage, YAGO.hasImageUrl, YAGO.hasGloss, YAGO.hasLicense, YAGO.hasAuthor, YAGO.hasTrademark,
+            YAGO.hasName, YAGO.hasUrl, YAGO.hasOTRSId, YAGO.hasShortDescription, YAGO.hasLongDescription, YAGO.isNamedEntity, "<_hasLinkLikelihood>");
 
-  @Override
-  public Set<Theme> input() {
-    Set<Theme> input = new HashSet<Theme>();
+    @Override
+    public Set<Theme> input() {
+        Set<Theme> input = new HashSet<>();
 
-    //YAGO functional facts needed for AIDA
-    //hasWIkipediaUrl, hasGender
-    //hasGivenName, hasFamilyName
-    //isNamedEntity
-    input.add(AIDAFunctionalExtractor.AIDAFUNCTIONALFACTS);
+        //YAGO functional facts needed for AIDA
+        //hasWIkipediaUrl, hasGender
+        //hasGivenName, hasFamilyName
+        //isNamedEntity
+        input.add(AIDAFunctionalExtractor.AIDAFUNCTIONALFACTS);
 
-    //the rest of the facts that don't need functional check
-    // Dictionary.
-    input.addAll(StructureExtractor.STRUCTUREFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages)); // also gives links and anchor texts.
-    input.addAll(DisambiguationPageExtractor.DISAMBIGUATIONMEANSFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    input.addAll(RedirectExtractor.REDIRECTFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    input.add(HardExtractor.HARDWIREDFACTS);
+        //the rest of the facts that don't need functional check
+        // Dictionary.
+        input.addAll(StructureExtractor.STRUCTUREFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages)); // also gives links and anchor texts.
+        input.addAll(DisambiguationPageExtractor.DISAMBIGUATIONMEANSFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        input.addAll(RedirectExtractor.REDIRECTFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        input.add(HardExtractor.HARDWIREDFACTS);
 
-    // Types and Taxonomy.
-    input.add(TransitiveTypeSubgraphExtractor.YAGOTRANSITIVETYPE);
-    input.add(ClassExtractor.YAGOTAXONOMY);
+        // Types and Taxonomy.
+        input.add(TransitiveTypeSubgraphExtractor.YAGOTRANSITIVETYPE);
+        input.add(ClassExtractor.YAGOTAXONOMY);
 
-    // Keyphrases.
-    input.addAll(ConteXtExtractor.CONTEXTFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    input.add(CategoryConteXtExtractor.CATEGORY_CONTEXT.inEnglish());
-    input.addAll(CategoryConteXtExtractor.CATEGORY_CONTEXT_ENTITIES_TRANSLATED.inLanguages(MultilingualExtractor.allLanguagesExceptEnglish()));
+        // Keyphrases.
+        input.addAll(ConteXtExtractor.CONTEXTFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        input.add(CategoryConteXtExtractor.CATEGORY_CONTEXT.inEnglish());
+        input.addAll(CategoryConteXtExtractor.CATEGORY_CONTEXT_ENTITIES_TRANSLATED.inLanguages(MultilingualExtractor.allLanguagesExceptEnglish()));
 
-    // Translation.
-    input.addAll(DictionaryExtractor.ENTITY_DICTIONARY.inLanguages(MultilingualExtractor.allLanguagesExceptEnglish()));
-    input.addAll(DictionaryExtractor.CATEGORY_DICTIONARY.inLanguages(MultilingualExtractor.allLanguagesExceptEnglish()));
+        // Translation.
+        input.addAll(DictionaryExtractor.ENTITY_DICTIONARY.inLanguages(MultilingualExtractor.allLanguagesExceptEnglish()));
+        input.addAll(DictionaryExtractor.CATEGORY_DICTIONARY.inLanguages(MultilingualExtractor.allLanguagesExceptEnglish()));
 
-    // Metadata.
-    input.add(MetadataExtractor.METADATAFACTS);
-    input.addAll(WikiInfoExtractor.WIKIINFO.inLanguages(MultilingualExtractor.wikipediaLanguages));
+        // Metadata.
+        input.add(MetadataExtractor.METADATAFACTS);
+        input.addAll(WikiInfoExtractor.WIKIINFO.inLanguages(MultilingualExtractor.wikipediaLanguages));
 
-    // Image.
-    input.add(WikidataImageExtractor.WIKIDATAIMAGES);
+        // Image.
+        input.add(WikidataImageExtractor.WIKIDATAIMAGES);
 
-    // WikiData links.
-    input.add(WikidataLabelExtractor.WIKIDATAINSTANCES);
-    
-    // Wikipedie category glosses.
-    input.addAll(CategoryGlossExtractor.CATEGORYGLOSSES.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    
-    // Image Licenses.
-    input.add(WikidataImageLicenseExtractor.WIKIDATAIMAGELICENSE);
+        // WikiData links.
+        input.add(WikidataLabelExtractor.WIKIDATAINSTANCES);
 
-    // Entity descriptions.
-    input.add(WikidataEntityDescriptionExtractor.WIKIDATAENTITYDESCRIPTIONS);
-    input.addAll(WikipediaEntityDescriptionExtractor.WIKIPEDIAENTITYDESCRIPTIONS.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    
-    // Mention Link Likelihood
-    input.addAll(MentionLinkLikelihoodExtractor.LIKELIHOODFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
-    
-    return input;
-  }
+        // Wikipedie category glosses.
+        input.addAll(CategoryGlossExtractor.CATEGORYGLOSSES.inLanguages(MultilingualExtractor.wikipediaLanguages));
 
-  @Override
-  public Set<Theme> output() {
-    return new FinalSet<>(AIDAFACTS);
-  }
+        // Image Licenses.
+        input.add(WikidataImageLicenseExtractor.WIKIDATAIMAGELICENSE);
 
-  @Override
-  public void extract() throws Exception {
-    Announce.doing("Merging all AIDA Sources");
-    for (Theme theme : input()) {
-      Announce.doing("Merging facts from", theme);
-      for (Fact fact : theme) {
-        if (isAIDARelation(fact)) {
-          AIDAFACTS.write(fact);
+        // Entity descriptions.
+        input.add(WikidataEntityDescriptionExtractor.WIKIDATAENTITYDESCRIPTIONS);
+        input.addAll(WikipediaEntityDescriptionExtractor.WIKIPEDIAENTITYDESCRIPTIONS.inLanguages(MultilingualExtractor.wikipediaLanguages));
+
+        // Mention Link Likelihood
+        input.addAll(MentionLinkLikelihoodExtractor.LIKELIHOODFACTS.inLanguages(MultilingualExtractor.wikipediaLanguages));
+
+        return input;
+    }
+
+    @Override
+    public Set<Theme> output() {
+        return new FinalSet<>(AIDAFACTS);
+    }
+
+    @Override
+    public void extract() throws Exception {
+        Announce.doing("Merging all AIDA Sources");
+        for (Theme theme : input()) {
+            Announce.doing("Merging facts from", theme);
+            for (Fact fact : theme) {
+                if (isAIDARelation(fact)) {
+                    AIDAFACTS.write(fact);
+                }
+            }
+            Announce.done();
         }
-      }
-      Announce.done();
+        Announce.done();
     }
-    Announce.done();
-  }
 
-  public boolean isAIDARelation(Fact fact) {
-    if (relations.contains(fact.getRelation())) {
-      return true;
-    } else {
-      return false;
+    public boolean isAIDARelation(Fact fact) {
+        return relations.contains(fact.getRelation());
     }
-  }
 
 }

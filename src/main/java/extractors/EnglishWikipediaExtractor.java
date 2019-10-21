@@ -22,6 +22,7 @@ along with YAGO.  If not, see <http://www.gnu.org/licenses/>.
 package extractors;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Superclass of all extractors that extract from the English Wikipedia
@@ -30,11 +31,11 @@ import java.io.File;
 
 public abstract class EnglishWikipediaExtractor extends DataExtractor {
 
-  protected File wikipedia() {
-    return (inputData);
-  }
+    protected File wikipedia() {
+        return (inputData);
+    }
 
-  public EnglishWikipediaExtractor(File wikipedia) {
-    super(wikipedia);
-  }
+    public EnglishWikipediaExtractor(File wikipedia) throws IOException {
+        super(wikipedia);
+    }
 }

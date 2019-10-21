@@ -1,4 +1,4 @@
-package test.fromWikipedia;
+package fromWikipedia;
 
 import static org.junit.Assert.assertTrue;
 

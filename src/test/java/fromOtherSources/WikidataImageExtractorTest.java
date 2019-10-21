@@ -1,4 +1,4 @@
-package test.fromOtherSources;
+package fromOtherSources;
 
 import java.util.List;
 import java.io.File;

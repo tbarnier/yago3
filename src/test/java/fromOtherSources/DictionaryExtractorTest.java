@@ -1,4 +1,4 @@
-package test.fromOtherSources;
+package fromOtherSources;
 
 import static org.junit.Assert.assertEquals;
 
